@@ -95,6 +95,10 @@ function initRSA() {
                 <input type=checkbox class='rsa-checkbox' id='rsa-AlertTurnTTS' />
                 <label class='rsa-label' for='rsa-AlertTurnTTS'>Alert if TTS is different from default</label>
             </div>
+            <div class='rsa-option-container sub'>
+                <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
+                <label class='rsa-label' for='rsa-NodeShieldMissing'>Highlight nodes that might be missing shields</label>
+            </div>
             <br>
             <img src=${iconImgs.extRgtGrn} height=${iconHeight} width=${iconWidth}>
             <img src=${iconImgs.extRgtBrn} height=${iconHeight} width=${iconWidth}>
@@ -109,7 +113,9 @@ function initRSA() {
     console.log('RSA: loaded');
 }
 
-function setupOptions() {
+async function setupOptions() {
+    await loadSettings();
+
     // Create OL layer for display
     rsaMapLayer = new OpenLayers.Layer.Vector('rsaMapLayer', { uniqueName: 'rsaMapLayer' });
     W.map.addLayer(rsaMapLayer);
@@ -123,6 +129,7 @@ function setupOptions() {
         setChecked('rsa-ShowTurnShields', rsaSettings.ShowTurnShields);
         setChecked('rsa-ShowTurnTTS', rsaSettings.ShowTurnTTS);
         setChecked('rsa-AlertTurnTTS', rsaSettings.AlertTurnTTS);
+        setChecked('rsa-NodeShieldMissing', rsaSettings.NodeShieldMissing);
 
         function setChecked(ele, status) {
             $(`#${ele}`).prop('checked', status);
@@ -131,8 +138,117 @@ function setupOptions() {
 
     // Register event listeners
     WazeWrap.Events.register('selectionchanged', null, tryScan);
+    WazeWrap.Events.register('moveend', null, tryScan);
 
-    // setEleStatus();
+    setEleStatus();
+
+    $('.lt-checkbox').change(function () {
+        let settingName = $(this)[0].id.substr(4);
+        rsaSettings[settingName] = this.checked;
+        saveSettings();
+    });
+}
+
+async function loadSettings() {
+    const localSettings = $.parseJSON(localStorage.getItem('rsa_Settings'));
+    const serverSettings = await WazeWrap.Remote.RetrieveSettings('rsa_Settings');
+    if (!serverSettings) {
+        console.error('RSA: Error communicating with WW settings server');
+    }
+
+    const defaultSettings = {
+        lastSaveAction: 0,
+        ShowSegShields: true,
+        HighNodeShields: true,
+        ShowNodeShields: true,
+        ShowTurnShields: true,
+        ShowTurnTTS: true,
+        AlertTurnTTS: true,
+        NodeShieldMissing: true
+    };
+
+    rsaSettings = $.extend({}, defaultSettings, localSettings);
+    if (serverSettings && serverSettings.lastSaveAction > rsaSettings.lastSaveAction) {
+        $.extend(rsaSettings, serverSettings);
+        // console.log('RSA: server settings used');
+    } else {
+        // console.log('RSA: local settings used');
+    }
+
+    // If there is no value set in any of the stored settings then use the default
+    Object.keys(defaultSettings).forEach((funcProp) => {
+        if (!rsaSettings.hasOwnProperty(funcProp)) {
+            rsaSettings[funcProp] = defaultSettings[funcProp];
+        }
+    });
+}
+
+async function saveSettings() {
+    const {
+        ShowSegShields,
+        HighNodeShields,
+        ShowNodeShields,
+        ShowTurnShields,
+        ShowTurnTTS,
+        AlertTurnTTS,
+        NodeShieldMissing
+    } = rsaSettings;
+
+    const localSettings = {
+        lastSaveAction: Date.now(),
+        ShowSegShields,
+        HighNodeShields,
+        ShowNodeShields,
+        ShowTurnShields,
+        ShowTurnTTS,
+        AlertTurnTTS,
+        NodeShieldMissing
+      
+    };
+
+    /* // Grab keyboard shortcuts and store them for saving
+    for (const name in W.accelerators.Actions) {
+        const {shortcut, group} = W.accelerators.Actions[name];
+        if (group === 'wmelt') {
+            let TempKeys = '';
+            if (shortcut) {
+                if (shortcut.altKey === true) {
+                    TempKeys += 'A';
+                }
+                if (shortcut.shiftKey === true) {
+                    TempKeys += 'S';
+                }
+                if (shortcut.ctrlKey === true) {
+                    TempKeys += 'C';
+                }
+                if (TempKeys !== '') {
+                    TempKeys += '+';
+                }
+                if (shortcut.keyCode) {
+                    TempKeys += shortcut.keyCode;
+                }
+            } else {
+                TempKeys = '-1';
+            }
+            localSettings[name] = TempKeys;
+        }
+    }
+
+    // Required for the instant update of changes to the keyboard shortcuts on the UI
+    rsaSettings = localSettings; */
+
+    if (localStorage) {
+        localStorage.setItem('RSA_Settings', JSON.stringify(localSettings));
+    }
+    const serverSave = await WazeWrap.Remote.SaveSettings('RSA_Settings', localSettings);
+
+    if (serverSave === null) {
+        console.warn('RSA: User PIN not set in WazeWrap tab');
+    } else {
+        if (serverSave === false) {
+            console.error('RSA: Unable to save settings to server');
+        }
+    }
 }
 
 function getId(ele) {
@@ -147,15 +263,16 @@ function tryScan() {
             let seg1 = W.model.segments.getObjectById(conSegs[i]);
             for(let j=0; j < conSegs.length; j++) {
                 let seg2 = W.model.segments.getObjectById(conSegs[j]);
-                getTurnShields(node, seg1, seg2);
+                processNode(node, seg1, seg2);
             }
         }
     }
 
     function scanSeg(seg) {
-        getSegShields(seg);
+        processSeg(seg);
     }
 
+    removeHighlights();
     const selFea = W.selectionManager.getSelectedFeatures();
     if (selFea.length > 0) {
         rsaLog('Selected stuff', 2);
@@ -179,26 +296,57 @@ function tryScan() {
     }
 }
 
-function getSegShields(seg) {
+function processSeg(seg) {
     rsaLog('Seg Scan', 2);
 }
 
-function getTurnShields(node, seg1, seg2) {
+function processNode(node, seg1, seg2) {
     let turn = W.model.getTurnGraph().getTurnThroughNode(node,seg1,seg2);
     let turnData = turn.getTurnData();
     let hasGuidence = turnData.hasTurnGuidance();
+
     if (hasGuidence) {
         let hasExitShield = turnData.turnGuidance.exitSigns.length > 0;
         let hasShields = !$.isEmptyObject(turnData.turnGuidance.roadShields)
-        rsaLog(`Node: ${node.attributes.id}`, 3);
-        rsaLog(`Exit Shield: ${hasExitShield}`, 3);
-        rsaLog(`Shield: ${hasShields}`, 3);
+        //rsaLog(`Node: ${node.attributes.id}`, 3);
+        //rsaLog(`Exit Shield: ${hasExitShield}`, 3);
+        //rsaLog(`Shield: ${hasShields}`, 3);
+
+        if(getId('rsa-HighNodeShields').checked) {
+            createHighlights(node);
+        }
     }
     
 }
 
+function isShieldCandidate() {
+
+}
+
 function displayNodeShields(node) {
 
+}
+
+function createHighlights(obj, overSized = false) {
+    rsaLog('Highlights fired', 2);
+    const geo = obj.geometry.clone();
+    const newVector = new OpenLayers.Feature.Vector(geo, {});
+    rsaMapLayer.addFeatures([newVector]);
+
+    console.log(geo);
+    if(obj.type == 'node') {
+        const node = document.getElementById(geo.id);
+        node.setAttribute('fill', 'orange');
+        node.setAttribute('fill-opacity', '0.9');
+        node.setAttribute('stroke-width', '0');
+        node.setAttribute('r', overSized ? '18' : '10');
+    } else {
+        nodeStyle.fillColor = 'green';
+    }
+}
+
+function removeHighlights() {
+    rsaMapLayer.removeAllFeatures();
 }
 
 function rsaLog(msg, lvl) {
