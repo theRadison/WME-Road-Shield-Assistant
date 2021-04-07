@@ -353,7 +353,7 @@ function processSeg(seg) {
 }
 
 function processNode(node, seg1, seg2) {
-    let turn = W.model.getTurnGraph().getTurnThroughNode(node,seg1,seg2);
+    let turn = W.model.getTurnGraph().getTurnThroughNode(node,seg1,seg2).getTurnData().turnGuidance;
     let turnData = turn.getTurnData();
     let hasGuidence = turnData.hasTurnGuidance();
 
