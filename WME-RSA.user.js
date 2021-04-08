@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.03.24.02
+// @version      2021.04.08.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -42,7 +42,35 @@ const ShieldImgs = {
     // Canada
     40: {}
 }
-const RoadAbbr = {}
+const RoadAbbr = {
+    235: {
+        // Arkansas
+        // Alabama
+        // Michigan
+        100000035: [
+            'I-',
+            'US-',
+            'CR-',
+            'M-',
+            'SR-'
+        ]
+    }
+}
+const Strings = {
+    'en-us': {
+        'enableScript': 'Script enabled',
+        'HighSegShields': 'Highlight Segments with Shields',
+        'ShowSegShields': 'Show Segment Shields on Map',
+        'SegShieldMissing': 'Highlight segments that might be missing shields',
+        'SegShieldError': "Highlight segments that have shields but maybe shouldn't",
+        'HighNodeShields': 'Highlight Nodes with Shields',
+        'ShowNodeShields': 'Show Node Shield Info',
+        'ShowTurnShields': 'Include turn icons (if exist)',
+        'ShowTurnTTS': 'Include TTS',
+        'AlertTurnTTS': 'Alert if TTS is different from default',
+        'NodeShieldMissing': 'Highlight nodes that might be missing shields'
+    }
+}
 
 let rsaSettings;
 let UpdateObj;
@@ -85,50 +113,50 @@ function initRSA() {
             <div style='margin-bottom:5px;border-bottom:1px solid black;'><span style='font-weight:bold;'>Road Shield Assistant</span> - v${GM_info.script.version}</div>
             <div class='rsa-option-container'>
                 <input type=checkbox class='rsa-checkbox' id='rsa-enableScript' />
-                <label class='rsa-label' for='rsa-enableScript'>Script Enabled</label>
+                <label class='rsa-label' for='rsa-enableScript'><span id='rsa-text-enableScript' /></label>
             </div>
             <div style='border:1px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-HighSegShields' />
-                    <label class='rsa-label' for='rsa-HighSegShields'>Highlight Segments with Shields</label>
+                    <label class='rsa-label' for='rsa-HighSegShields'><span id='rsa-text-HighSegShields' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowSegShields' />
-                    <label class='rsa-label' for='rsa-ShowSegShields'>Show Segment Shield Info</label>
+                    <label class='rsa-label' for='rsa-ShowSegShields'><span id='rsa-text-ShowSegShields' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldMissing' />
-                    <label class='rsa-label' for='rsa-SegShieldMissing'>Highlight segments that might be missing shields</label>
+                    <label class='rsa-label' for='rsa-SegShieldMissing'><span id='rsa-text-SegShieldMissing' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldError' />
-                    <label class='rsa-label' for='rsa-SegShieldError'>Highlight segments that have shields but maybe shouldn't</label>
+                    <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError' /></label>
                 </div>
             </div>
             <div style='border:1px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-HighNodeShields' />
-                    <label class='rsa-label' for='rsa-HighNodeShields'>Highlight Nodes with Shields</label>
+                    <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowNodeShields' />
-                    <label class='rsa-label' for='rsa-ShowNodeShields'>Show Node Shield Info</label>
+                    <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields' /></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowTurnShields' />
-                    <label class='rsa-label' for='rsa-ShowTurnShields'>Include turn icons (if exist)</label>
+                    <label class='rsa-label' for='rsa-ShowTurnShields'><span id='rsa-text-ShowTurnShields' /></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowTurnTTS' />
-                    <label class='rsa-label' for='rsa-ShowTurnTTS'>Include TTS</label>
+                    <label class='rsa-label' for='rsa-ShowTurnTTS'><span id='rsa-text-ShowTurnTTS' /></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-AlertTurnTTS' />
-                    <label class='rsa-label' for='rsa-AlertTurnTTS'>Alert if TTS is different from default</label>
+                    <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
-                    <label class='rsa-label' for='rsa-NodeShieldMissing'>Highlight nodes that might be missing shields</label>
+                    <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing' /></label>
                 </div>
             </div>
             <br>
@@ -186,6 +214,13 @@ async function setupOptions() {
         removeHighlights();
         tryScan();
     });
+
+    // Add translated UI text
+    const lang = I18n.currentLocale().toLowerCase();
+    for (let i=0; i < Object.keys(Strings[lang]).length; i++) {
+        let key = Object.keys(Strings[lang])[i]
+        $(`#rsa-text-${key}`).text(Strings[lang][key]);
+    }
 }
 
 async function loadSettings() {
@@ -207,7 +242,10 @@ async function loadSettings() {
         ShowTurnShields: true,
         ShowTurnTTS: true,
         AlertTurnTTS: true,
-        NodeShieldMissing: true
+        NodeShieldMissing: true,
+        HighSegClr: 'blue',
+        MissSegClr: 'green',
+        ErrSegClr: 'purple'
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -239,7 +277,10 @@ async function saveSettings() {
         ShowTurnShields,
         ShowTurnTTS,
         AlertTurnTTS,
-        NodeShieldMissing
+        NodeShieldMissing,
+        HighSegClr,
+        MissSegClr,
+        ErrSegClr
     } = rsaSettings;
 
     const localSettings = {
@@ -254,8 +295,10 @@ async function saveSettings() {
         ShowTurnShields,
         ShowTurnTTS,
         AlertTurnTTS,
-        NodeShieldMissing
-      
+        NodeShieldMissing,
+        HighSegClr,
+        MissSegClr,
+        ErrSegClr
     };
 
     /* // Grab keyboard shortcuts and store them for saving
@@ -360,30 +403,17 @@ function processSeg(seg) {
     let hasShield = street.signType !== null;
 
     // Display shield on map
-    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg.geometry, countryID, street.signType);
+    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg.geometry, countryID, street.signType, street.signText);
 
     // If candidate and has shield
-    if (candidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg.geometry, color);
+    if (candidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
 
     // If candidate and missing shield
-    if (candidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg.geometry, color);
+    if (candidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
 
     // If not candidate and has shield
-    if (!candidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg.geometry, color);
+    if (!candidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg, rsaSettings.ErrSegClr);
 
-}
-
-function isStreetCandidate(s, state, country) {
-    let isCandidate = false;
-    let abbr = RoadAbbr[country];
-
-    _.each(abbr, n => {
-        // Regex goes here
-        if(true) {
-            isCandidate = true;
-        }
-    })
-    return isCandidate;
 }
 
 function processNode(node, seg1, seg2) {
@@ -398,46 +428,105 @@ function processNode(node, seg1, seg2) {
         //rsaLog(`Exit Shield: ${hasExitShield}`, 3);
         //rsaLog(`Shield: ${hasShields}`, 3);
 
-        if(getId('rsa-HighNodeShields').checked) {
-            createHighlight(node);
+        if(rsaSettings.HighNodeShields) {
+            createHighlight(node, 'orange');
         }
     }
     
 }
 
-function isShieldCandidate(obj) {
+function isStreetCandidate(s, state, country) {
+    let isCandidate = false;
+    let name = s.name;
+    let abbr = RoadAbbr[country];
+
+    _.each(abbr[state], n => {
+        // console.log('name: ' + name + ' abbr: ' + n);
+        if (name && name.includes(n)) isCandidate = true;
+    })
+    // console.log(isCandidate);
+    return isCandidate;
+}
+
+function isNodeCandidate(obj) {
 
 }
 
 function displayNodeShields(node) {
-
 }
 
-function displaySegShields(geometry, countryID, shieldID) {
+function displaySegShields(geometry, countryID, shieldID, shieldText) {
+    const geo = geometry.clone();
+    const geoCom = geo.components;
+    const shields = ShieldImgs[countryID];
+    const shieldIcon = shields[shieldID];
+    const style = {
+        externalGraphic: shieldIcon,
+        graphicWidth: 37,
+        graphicHeight: 37,
+        graphicYOffset: -20,
+        graphicZIndex: 99999,
+        label: shieldText,
+        fontSize: 16
+    };
+    let labelPoint;
+    let imageFeature;
 
+    if (geoCom.length == 2){
+        const midX = (((geoCom[0].x + geoCom[1].x) / 2) + geoCom[0].x) / 2;
+        const midY = (((geoCom[0].y + geoCom[1].y) / 2) + geoCom[0].y) / 2;
+
+        labelPoint = new OpenLayers.Geometry.Point(midX, midY);
+        imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
+    } else {
+        for (i = 0; i < geoCom.length - 1; i++) {
+            if(i%3 == 1){
+                const midX = (((geoCom[i].x + geoCom[i+1].x) / 2) + geoCom[i].x) / 2;
+                const midY = (((geoCom[i].y + geoCom[i+1].y) / 2) + geoCom[i].y) / 2;
+
+                labelPoint = new OpenLayers.Geometry.Point(midX, midY);
+                imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
+            }
+        }
+    }
+
+    rsaMapLayer.addFeatures([imageFeature]);
+    rsaMapLayer.setZIndex(10000);
 }
 
-function createHighlight(obj, overSized = false) {
+function createHighlight(obj, color, overSized = false) {
     // rsaLog('Highlights fired', 2);
+    const geo = obj.geometry.clone();
+    // console.log('geo ' + geo);
+    let newFeat;
     let style = {};
     let isNode = obj.type == 'node';
 
     if(isNode) {
         style = {
-            strokeColor: 'orange',
+            strokeColor: color,
             strokeOpacity: 0.75,
             strokeWidth: 0,
-            fillColor: "orange",
+            fillColor: color,
             fillOpacity: 0.75,
             pointRadius: 9
         }
+        newFeat = new OpenLayers.Geometry.Point(geo.x, geo.y);
     } else {
-        // nodeStyle.fillColor = 'green';
+        // console.log('seg highlight')
+        style = {
+            strokeColor: color,
+            strokeOpacity: 0.75,
+            strokeWidth: 4,
+            fillColor: color,
+            fillOpacity: 0.75
+        }
+        newFeat =  new OpenLayers.Geometry.LineString(geo.components, {});
+        // console.log('feat ' + newFeat);
     }
 
-    const geo = obj.geometry.clone();
-    const newPoint = new OpenLayers.Geometry.Point(geo.x, geo.y);
-    const newVector = new OpenLayers.Feature.Vector(newPoint, null, style);
+    
+    const newVector = new OpenLayers.Feature.Vector(newFeat, null, style);
     // const newVector = new OpenLayers.Feature.Vector(geo, style, style);
     rsaMapLayer.addFeatures([newVector]);
 }
