@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.09.01
+// @version      2021.04.12.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -207,8 +207,7 @@ const RoadAbbr = {
             "SH-": 2055,
             "SR-": 2055
         },
-        // Michigan
-        100000035: {
+        "Michigan": {
             'I-': 5,
             'US-': 6,
             'CR-': 2056,
@@ -468,7 +467,8 @@ const Strings = {
         'ShowTurnShields': 'Include turn icons (if exist)',
         'ShowTurnTTS': 'Include TTS',
         'AlertTurnTTS': 'Alert if TTS is different from default',
-        'NodeShieldMissing': 'Highlight nodes that might be missing shields'
+        'NodeShieldMissing': 'Highlight nodes that might be missing shields',
+        'resetSettings': 'Reset to default settings'
     }
 }
 
@@ -502,10 +502,10 @@ function initRSA() {
         '.rsa-section-wrapper.border {border-bottom:1px solid grey;margin-bottom:5px;}',
         '.rsa-option-container {padding:3px;}',
         '.rsa-option-container.sub {margin-left:10px;}',
-        'input[type="checkbox"].rsa-checkbox {position:relative;top:3px;vertical-align:top;margin:0;}',
-        'input[type="text"].rsa-color-input {position:relative;width:70px;padding:3px;border:2px solid black;border-radius:6px;}',
+        'input[type="checkbox"].rsa-checkbox {display:inline-block;position:relative;top:3px;vertical-align:top;margin:0;}',
+        'input[type="color"].rsa-color-input {display:inline-block;position:relative;width:20px;margin-left:2px;padding:1px;border:1px solid black;border-radius:6px;}',
         'input[type="text"].rsa-color-input:focus {outline-width:0;}',
-        'label.rsa-label {position:relative;max-width:90%;font-weight:normal;padding-left:5px}'
+        'label.rsa-label {display:inline-block;position:relative;max-width:80%;vertical-align:top;font-weight:normal;padding-left:5px;word-wrap:break-word;}'
     ].join(' ');
 
     const $rsaTab = $('<div>');
@@ -516,29 +516,28 @@ function initRSA() {
                 <input type=checkbox class='rsa-checkbox' id='rsa-enableScript' />
                 <label class='rsa-label' for='rsa-enableScript'><span id='rsa-text-enableScript' /></label>
             </div>
-            <div style='border:1px solid black;'>
-                <div class='rsa-option-container'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-HighSegShields' />
-                    <label class='rsa-label' for='rsa-HighSegShields'><span id='rsa-text-HighSegShields' /></label>
-                </div>
+            <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowSegShields' />
                     <label class='rsa-label' for='rsa-ShowSegShields'><span id='rsa-text-ShowSegShields' /></label>
                 </div>
                 <div class='rsa-option-container'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-HighSegShields' />
+                    <input type=color class='rsa-color-input' id='rsa-HighSegClr' />
+                    <label class='rsa-label' for='rsa-HighSegShields'><span id='rsa-text-HighSegShields' /></label>
+                </div>
+                <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldMissing' />
+                    <input type=color class='rsa-color-input' id='rsa-MissSegClr' />
                     <label class='rsa-label' for='rsa-SegShieldMissing'><span id='rsa-text-SegShieldMissing' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldError' />
+                    <input type=color class='rsa-color-input' id='rsa-ErrSegClr' />
                     <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError' /></label>
                 </div>
             </div>
-            <div style='border:1px solid black;'>
-                <div class='rsa-option-container'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-HighNodeShields' />
-                    <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields' /></label>
-                </div>
+            <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowNodeShields' />
                     <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields' /></label>
@@ -556,8 +555,19 @@ function initRSA() {
                     <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
                 </div>
                 <div class='rsa-option-container'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-HighNodeShields' />
+                    <input type=color class='rsa-color-input' id='rsa-HighNodeClr' />
+                    <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields' /></label>
+                </div>
+                <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
+                    <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
                     <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing' /></label>
+                </div>
+            </div>
+            <div style='border-top:2px solid black;'>
+                <div class='rsa-option-container'>
+                    <input type=button id='rsa-resetSettings' value='Reset Settings' />
                 </div>
             </div>
             <br>
@@ -599,9 +609,26 @@ async function setupOptions() {
         setChecked('rsa-ShowTurnTTS', rsaSettings.ShowTurnTTS);
         setChecked('rsa-AlertTurnTTS', rsaSettings.AlertTurnTTS);
         setChecked('rsa-NodeShieldMissing', rsaSettings.NodeShieldMissing);
+        setValue('rsa-HighSegClr', rsaSettings.HighSegClr);
+        setValue('rsa-MissSegClr', rsaSettings.MissSegClr);
+        setValue('rsa-ErrSegClr', rsaSettings.ErrSegClr);
+        setValue('rsa-HighNodeClr', rsaSettings.HighNodeClr);
+        setValue('rsa-MissNodeClr', rsaSettings.MissNodeClr);
 
         function setChecked(ele, status) {
             $(`#${ele}`).prop('checked', status);
+        }
+
+        function setValue(ele, value) {
+            const inputElem = $(`#${ele}`);
+            inputElem.attr('value', value);
+            inputElem.css('border', `1px solid ${value}`);
+        }
+
+        if (!rsaSettings.ShowNodeShields) {
+            $('.rsa-option-container.sub').hide();
+        } else {
+            $('.rsa-option-container.sub').show();
         }
     }
 
@@ -618,6 +645,40 @@ async function setupOptions() {
 
         removeHighlights();
         tryScan();
+    });
+    $('.rsa-color-input').change(function () {
+        let settingName = $(this)[0].id.substr(4);
+        rsaSettings[settingName] = this.value;
+        saveSettings();
+    });
+    $('#rsa-ShowNodeShields').click(function() {
+        if (!getId('rsa-ShowNodeShields').checked) $('.rsa-option-container.sub').hide();
+        else $('.rsa-option-container.sub').show();
+    });
+    $('#rsa-resetSettings').click(function() {
+        const defaultSettings = {
+            lastSaveAction: 0,
+            enableScript: true,
+            HighSegShields: true,
+            ShowSegShields: true,
+            SegShieldMissing: true,
+            SegShieldError: true,
+            HighNodeShields: true,
+            ShowNodeShields: true,
+            ShowTurnShields: true,
+            ShowTurnTTS: true,
+            AlertTurnTTS: true,
+            NodeShieldMissing: true,
+            HighSegClr: '#0066ff',
+            MissSegClr: '#00ff00',
+            ErrSegClr: '#cc00ff',
+            HighNodeClr: '#ff00bf',
+            MissNodeClr: '#ff0000'
+        }
+
+        rsaSettings = defaultSettings;
+        saveSettings();
+        setEleStatus();
     });
 
     // Add translated UI text
@@ -648,9 +709,11 @@ async function loadSettings() {
         ShowTurnTTS: true,
         AlertTurnTTS: true,
         NodeShieldMissing: true,
-        HighSegClr: 'blue',
-        MissSegClr: 'green',
-        ErrSegClr: 'purple'
+        HighSegClr: '#0066ff',
+        MissSegClr: '#00ff00',
+        ErrSegClr: '#cc00ff',
+        HighNodeClr: '#ff00bf',
+        MissNodeClr: '#ff0000'
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -670,7 +733,6 @@ async function loadSettings() {
 }
 
 async function saveSettings() {
-    console.log('saving');
     const {
         enableScript,
         HighSegShields,
@@ -685,7 +747,9 @@ async function saveSettings() {
         NodeShieldMissing,
         HighSegClr,
         MissSegClr,
-        ErrSegClr
+        ErrSegClr,
+        HighNodeClr,
+        MissNodeClr
     } = rsaSettings;
 
     const localSettings = {
@@ -703,7 +767,9 @@ async function saveSettings() {
         NodeShieldMissing,
         HighSegClr,
         MissSegClr,
-        ErrSegClr
+        ErrSegClr,
+        HighNodeClr,
+        MissNodeClr
     };
 
     /* // Grab keyboard shortcuts and store them for saving
@@ -776,7 +842,7 @@ function tryScan() {
 
     removeHighlights();
     let selFea = W.selectionManager.getSelectedFeatures();
-    if (selFea.length > 0) {
+    if (selFea && selFea.length > 0) {
         //rsaLog('Selected stuff', 2);
     } else {
         //rsaLog('General Scan', 2);
@@ -802,10 +868,12 @@ function processSeg(seg) {
     let segAtt = seg.attributes;
     let street = W.model.streets.getObjectById(segAtt.primaryStreetID);
     let cityID = W.model.cities.getObjectById(street.cityID);
-    let stateID = cityID.attributes.stateID;
+    let stateName = W.model.states.getObjectById(cityID.attributes.stateID).name;
     let countryID = cityID.attributes.countryID;
-    let candidate = isStreetCandidate(street, stateID, countryID);
+    let candidate = isStreetCandidate(street, stateName, countryID);
     let hasShield = street.signType !== null;
+
+    if (segAtt.roadType === 4) return;
 
     // Display shield on map
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg.geometry, countryID, street.signType, street.signText);
