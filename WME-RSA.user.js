@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.08.01
+// @version      2021.04.09.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -43,17 +43,417 @@ const ShieldImgs = {
     40: {}
 }
 const RoadAbbr = {
+    // Canada
+    40: {},
+
+    // US
     235: {
-        // Arkansas
-        // Alabama
+        "Alabama": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SR-": 2019
+        },
+        "Alaska": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SR-": 2017
+        },
+        "Arizona": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SR-": 2022
+        },
+        "Arkansas": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "AR-": 2020,
+            "AR-$1 SPUR": 2020
+        },
+        "California": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SH-": 1082,
+            "SR-": 1082
+        },   
+        "Colorado": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SH-": 2025,
+            "SR-": 2025
+        },
+        "Connecticut": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SH-": 2027,
+            "SR-": 2027
+        },
+        "Delaware": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SH-": 7,
+            "SR-": 7
+        },
+        "Florida": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SH-": 2030,
+            "SR-": 2030
+        },
+        "Georgia": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SH-": 2036,
+            "SR-": 2036
+        },
+        "Hawaii": {
+            'I-': 5,
+            'US-': 6,
+            "CR-": 2002,
+            "SH-": 2041,
+            "SR-": 2041
+        },
+        "Idaho": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2043,
+            "SR-": 2043
+        },
+        "Illinois": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2044,
+            "SR-": 2044
+        },
+        "Indiana": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2045,
+            "SR-": 2045,
+            "IN-": 2045
+        },
+        "Iowa": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 7,
+            "SR-": 7,
+            "IA-": 7
+        },
+        "Kansas": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2046,
+            "SR-": 2046,
+            "K-": 2046
+        },
+        "Kentucky": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 7,
+            "SR-": 7,
+        },
+        "Louisiana": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 1117,
+            "SR-": 1117,
+            "LA-": 1117,
+            "LA SPUR": 1115
+        },
+        "Maine": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2051,
+            "SR-": 2051
+        },
+        "Maryland": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2053,
+            "SR-": 2053
+        },
+        "Massachusetts": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2055,
+            "SR-": 2055
+        },
         // Michigan
-        100000035: [
-            'I-',
-            'US-',
-            'CR-',
-            'M-',
-            'SR-'
-        ]
+        100000035: {
+            'I-': 5,
+            'US-': 6,
+            'CR-': 2056,
+            'M-': 2056,
+            'SR-': 2056
+        },
+        "Minnesota": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2060,
+            "SR-": 2060,
+            "MN-": 2060
+        },
+        "Mississippi": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 7,
+            "SR-": 7,
+            "MS-": 7
+        },
+        "Missouri": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2061,
+            "SR-": 2061,
+            "MO-": 2061
+        },
+        "Montana": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2063,
+            "SR-": 2063
+        },
+        "Nebraska": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 7,
+            "SR-": 7,
+            "L-": 7,
+            "N-": 7,
+            "S-": 7
+        },
+        "Nevada": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2086,
+            "SR-": 2086
+        },
+        "New Hampshire": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2076,
+            "SR-": 2076
+        },
+        "New Jersey": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 7,
+            "SR-": 7
+        },
+        "New Mexico": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2085,
+            "SR-": 2085
+        },
+        "New York": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2087,
+            "SR-": 2087,
+            "NY-": 2087,
+            "NY SPUR": 2087
+        },
+        "North Carolina": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2065,
+            "SR-": 2065
+        },
+        "North Dakota": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2070,
+            "SR-": 2070,
+            "ND-": 2070
+        },
+        "Ohio": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2095,
+            "SR-": 2095
+        },
+        "Oklahoma": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2097,
+            "SR-": 2097
+        },
+        "Oregon": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2099,
+            "SR-": 2099
+        },
+        "Pennsylvania": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2101,
+            "SR-": 2101
+        },
+        "Rhode Island": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2108,
+            "SR-": 2108
+        },
+        "South Carolina": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2109,
+            "SR-": 2109,
+            "SC-": 2109
+        },
+        "South Dakota": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2114,
+            "SR-": 2114,
+            "SD-": 2114
+        },
+        "Tennessee": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2115,
+            "SR-": 2115
+        },
+        "Texas": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2117,
+            "SR-": 2117
+        },
+        "Utah": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2127,
+            "SR-": 2127
+        },
+        "Vermont": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2131,
+            "SR-": 2131
+        },
+        "Virginia": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2128,
+            "SR-": 2128
+        },
+        "Washington": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2133,
+            "SR-": 2133
+        },
+        "West Virginia": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2138,
+            "SR-": 2138,
+            "WV-": 2138,
+        },
+        "Wisconsin": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2137,
+            "CR-": 2137,
+            "SH-": 2135,
+            "SR-": 2135,
+            "WIS-": 2135,
+            "WIS SPUR": 2135
+        },
+        "Wyoming": {
+            'I-': 5,
+            'US-': 6,
+            "CH-": 2002,
+            "CR-": 2002,
+            "SH-": 2143,
+            "SR-": 2143,
+            "WY-": 2143,
+        }
     }
 }
 const Strings = {
@@ -75,6 +475,7 @@ const Strings = {
 let rsaSettings;
 let UpdateObj;
 let rsaMapLayer;
+let rsaIconLayer;
 let iconHeight = 30;
 let iconWidth = 50;
 
@@ -180,6 +581,10 @@ async function setupOptions() {
     rsaMapLayer = new OpenLayers.Layer.Vector('rsaMapLayer', { uniqueName: 'rsaMapLayer' });
     W.map.addLayer(rsaMapLayer);
     rsaMapLayer.setVisibility(true);
+
+    rsaIconLayer = new OpenLayers.Layer.Vector('rsaIconLayer', { uniqueName: 'rsaIconLayer' });
+    W.map.addLayer(rsaIconLayer);
+    rsaIconLayer.setVisibility(true);
 
     // Set user options
     function setEleStatus() {
@@ -351,14 +756,14 @@ function getId(ele) {
 }
 
 function tryScan() {
-    if(!rsaSettings.enableScript) return;
+    if (!rsaSettings.enableScript) return;
 
     function scanNode(node) {
         let conSegs = node.attributes.segIDs;
 
-        for(let i=0; i < conSegs.length; i++) {
+        for (let i=0; i < conSegs.length; i++) {
             let seg1 = W.model.segments.getObjectById(conSegs[i]);
-            for(let j=0; j < conSegs.length; j++) {
+            for (let j=0; j < conSegs.length; j++) {
                 let seg2 = W.model.segments.getObjectById(conSegs[j]);
                 processNode(node, seg1, seg2);
             }
@@ -370,7 +775,7 @@ function tryScan() {
     }
 
     removeHighlights();
-    const selFea = W.selectionManager.getSelectedFeatures();
+    let selFea = W.selectionManager.getSelectedFeatures();
     if (selFea.length > 0) {
         //rsaLog('Selected stuff', 2);
     } else {
@@ -406,13 +811,13 @@ function processSeg(seg) {
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg.geometry, countryID, street.signType, street.signText);
 
     // If candidate and has shield
-    if (candidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
+    if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
 
     // If candidate and missing shield
-    if (candidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
+    if (candidate.isCandidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
 
     // If not candidate and has shield
-    if (!candidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg, rsaSettings.ErrSegClr);
+    if (!candidate.isCandidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg, rsaSettings.ErrSegClr);
 
 }
 
@@ -436,16 +841,23 @@ function processNode(node, seg1, seg2) {
 }
 
 function isStreetCandidate(s, state, country) {
-    let isCandidate = false;
+    let info = {
+        isCandidate: false,
+        iconID: null
+    }
     let name = s.name;
-    let abbr = RoadAbbr[country];
+    let abbrvs = RoadAbbr[country][state];
 
-    _.each(abbr[state], n => {
-        // console.log('name: ' + name + ' abbr: ' + n);
-        if (name && name.includes(n)) isCandidate = true;
-    })
-    // console.log(isCandidate);
-    return isCandidate;
+    for (let i=0; i < Object.keys(abbrvs).length; i++) {
+        let abbr = Object.keys(abbrvs)[i];
+        // console.log('name: ' + name + ' abbr: ' + abbr);
+        if (name && name.includes(abbr)) {
+            info.isCandidate = true;
+            info.iconID = abbrvs[i];
+        }
+    }
+    // console.log(info);
+    return info;
 }
 
 function isNodeCandidate(obj) {
@@ -458,10 +870,10 @@ function displayNodeShields(node) {
 function displaySegShields(geometry, countryID, shieldID, shieldText) {
     const geo = geometry.clone();
     const geoCom = geo.components;
-    const shields = ShieldImgs[countryID];
-    const shieldIcon = shields[shieldID];
+    const iconURL = 'https://renderer.gcp.wazestg.com/renderer/v1/signs/' + shieldID;
+
     const style = {
-        externalGraphic: shieldIcon,
+        externalGraphic: iconURL,
         graphicWidth: 37,
         graphicHeight: 37,
         graphicYOffset: -20,
@@ -469,29 +881,28 @@ function displaySegShields(geometry, countryID, shieldID, shieldText) {
         label: shieldText,
         fontSize: 16
     };
-    let labelPoint;
-    let imageFeature;
 
     if (geoCom.length == 2){
         const midX = (((geoCom[0].x + geoCom[1].x) / 2) + geoCom[0].x) / 2;
         const midY = (((geoCom[0].y + geoCom[1].y) / 2) + geoCom[0].y) / 2;
 
-        labelPoint = new OpenLayers.Geometry.Point(midX, midY);
-        imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
+        const labelPoint = new OpenLayers.Geometry.Point(midX, midY);
+        const imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
+        rsaIconLayer.addFeatures([imageFeature]);
     } else {
         for (i = 0; i < geoCom.length - 1; i++) {
             if(i%3 == 1){
                 const midX = (((geoCom[i].x + geoCom[i+1].x) / 2) + geoCom[i].x) / 2;
                 const midY = (((geoCom[i].y + geoCom[i+1].y) / 2) + geoCom[i].y) / 2;
 
-                labelPoint = new OpenLayers.Geometry.Point(midX, midY);
-                imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
+                const labelPoint = new OpenLayers.Geometry.Point(midX, midY);
+                const imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
+                rsaIconLayer.addFeatures([imageFeature]);
             }
         }
     }
 
-    rsaMapLayer.addFeatures([imageFeature]);
-    rsaMapLayer.setZIndex(10000);
+    rsaIconLayer.setZIndex(600);
 }
 
 function createHighlight(obj, color, overSized = false) {
@@ -533,6 +944,7 @@ function createHighlight(obj, color, overSized = false) {
 
 function removeHighlights() {
     rsaMapLayer.removeAllFeatures();
+    rsaIconLayer.removeAllFeatures();
 }
 
 function rsaLog(msg, lvl) {
