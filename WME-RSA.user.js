@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.15.01
+// @version      2021.04.16.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -17,7 +17,7 @@
 /* global _ */
 /* global require */
 
-const debugLevel = 2;
+const debugLvl = 1;
 const GF_LINK = '1';
 const FORUM_LINK = '2';
 const RSA_UPDATE_NOTES = 'updates';
@@ -448,12 +448,14 @@ const Strings = {
         'SegShieldError': "Highlight seg that have shields but maybe shouldn't",
         'HighNodeShields': 'Highlight Nodes with Shields',
         'ShowNodeShields': 'Show Node Shield Info',
-        'ShowTurnShields': 'Include turn icons (if exist)',
+        'ShowExitShields': 'Include turn icons (if exists)',
         'ShowTurnTTS': 'Include TTS',
         'AlertTurnTTS': 'Alert if TTS is different from default',
         'NodeShieldMissing': 'Highlight nodes that might be missing shields',
         'resetSettings': 'Reset to default settings',
-        'disabledFeat': '(Feature not configured for this country)'
+        'disabledFeat': '(Feature not configured for this country)',
+        'ShowTowards': 'Include Towards (if exists)',
+        'ShowVisualInst': 'Include Visual Instruction'
     }
 }
 
@@ -529,14 +531,22 @@ function initRSA() {
                     <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields' /></label>
                 </div>
                 <div class='rsa-option-container sub'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowTurnShields' />
-                    <label class='rsa-label' for='rsa-ShowTurnShields'><span id='rsa-text-ShowTurnShields' /></label>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowExitShields' />
+                    <label class='rsa-label' for='rsa-ShowExitShields'><span id='rsa-text-ShowExitShields' /></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowTurnTTS' />
                     <label class='rsa-label' for='rsa-ShowTurnTTS'><span id='rsa-text-ShowTurnTTS' /></label>
                 </div>
                 <div class='rsa-option-container sub'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowTowards' />
+                    <label class='rsa-label' for='rsa-ShowTowards'><span id='rsa-text-ShowTowards' /></label>
+                </div>
+                <div class='rsa-option-container sub'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowVisualInst' />
+                    <label class='rsa-label' for='rsa-ShowVisualInst'><span id='rsa-text-ShowVisualInst' /></label>
+                </div>
+                <div class='rsa-option-container sub' style='display:none;'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-AlertTurnTTS' />
                     <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
                 </div>
@@ -545,7 +555,7 @@ function initRSA() {
                     <input type=color class='rsa-color-input' id='rsa-HighNodeClr' />
                     <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields' /></label>
                 </div>
-                <div class='rsa-option-container'>
+                <div class='rsa-option-container' style='display:none;'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
                     <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
                     <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing' /></label>
@@ -591,9 +601,11 @@ async function setupOptions() {
         setChecked('rsa-SegShieldError', rsaSettings.SegShieldError);
         setChecked('rsa-HighNodeShields', rsaSettings.HighNodeShields);
         setChecked('rsa-ShowNodeShields', rsaSettings.ShowNodeShields);
-        setChecked('rsa-ShowTurnShields', rsaSettings.ShowTurnShields);
+        setChecked('rsa-ShowExitShields', rsaSettings.ShowExitShields);
         setChecked('rsa-ShowTurnTTS', rsaSettings.ShowTurnTTS);
         setChecked('rsa-AlertTurnTTS', rsaSettings.AlertTurnTTS);
+        setChecked('rsa-ShowTowards', rsaSettings.ShowTowards);
+        setChecked('rsa-ShowVisualInst', rsaSettings.ShowVisualInst);
         setChecked('rsa-NodeShieldMissing', rsaSettings.NodeShieldMissing);
         setValue('rsa-HighSegClr', rsaSettings.HighSegClr);
         setValue('rsa-MissSegClr', rsaSettings.MissSegClr);
@@ -628,6 +640,20 @@ async function setupOptions() {
     $('.rsa-checkbox').change(function () {
         let settingName = $(this)[0].id.substr(4);
         rsaSettings[settingName] = this.checked;
+
+        // Check to ensure highlight nodes and show node shields don't onverlap each other
+        // if (settingName = 'ShowNodeShields') {
+        //     if (this.checked) {
+        //         $('rsa-HighNodeShields').prop('checked', false);
+        //         rsaSettings.HighNodeShields = false;
+        //     }
+        // } else if (settingName = 'HighNodeShields') {
+        //     if (this.checked) {
+        //         $('rsa-ShowNodeShields').prop('checked', false);
+        //         rsaSettings.ShowNodeShields = false;
+        //     }
+        // }
+
         saveSettings();
 
         removeHighlights();
@@ -655,7 +681,7 @@ async function setupOptions() {
             SegShieldError: true,
             HighNodeShields: true,
             ShowNodeShields: true,
-            ShowTurnShields: true,
+            ShowExitShields: true,
             ShowTurnTTS: true,
             AlertTurnTTS: true,
             NodeShieldMissing: true,
@@ -670,7 +696,6 @@ async function setupOptions() {
         saveSettings();
         setEleStatus();
     });
-
     // Add translated UI text
     LANG = I18n.currentLocale().toLowerCase();
     for (let i=0; i < Object.keys(Strings[LANG]).length; i++) {
@@ -696,10 +721,12 @@ async function loadSettings() {
         SegShieldMissing: true,
         SegShieldError: true,
         HighNodeShields: true,
-        ShowNodeShields: true,
-        ShowTurnShields: true,
+        ShowNodeShields: false,
+        ShowExitShields: true,
         ShowTurnTTS: true,
         AlertTurnTTS: true,
+        ShowTowards: true,
+        ShowVisualInst: true,
         NodeShieldMissing: true,
         HighSegClr: '#0066ff',
         MissSegClr: '#00ff00',
@@ -733,9 +760,11 @@ async function saveSettings() {
         SegShieldError,
         HighNodeShields,
         ShowNodeShields,
-        ShowTurnShields,
+        ShowExitShields,
         ShowTurnTTS,
         AlertTurnTTS,
+        ShowTowards,
+        ShowVisualInst,
         NodeShieldMissing,
         HighSegClr,
         MissSegClr,
@@ -753,9 +782,11 @@ async function saveSettings() {
         SegShieldError,
         HighNodeShields,
         ShowNodeShields,
-        ShowTurnShields,
+        ShowExitShields,
         ShowTurnTTS,
         AlertTurnTTS,
+        ShowTowards,
+        ShowVisualInst,
         NodeShieldMissing,
         HighSegClr,
         MissSegClr,
@@ -879,17 +910,16 @@ function tryScan() {
     } else {
         //rsaLog('General Scan', 2);
 
-        // Scan all nodes on screen
-        if(rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields) {
-            _.each(W.model.nodes.getObjectArray(), n => {
-                scanNode(n);
-            });
-        }
-
         // Scan all segments on screen
         if(rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields) {
             _.each(W.model.segments.getObjectArray(), s => {
                 scanSeg(s);
+            });
+        }
+        // Scan all nodes on screen
+        if(rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields) {
+            _.each(W.model.nodes.getObjectArray(), n => {
+                scanNode(n);
             });
         }
        
@@ -958,12 +988,16 @@ function processNode(node, seg1, seg2) {
     if (hasGuidence) {
         let hasExitShield = turnData.turnGuidance.exitSigns.length > 0;
         let hasShields = !$.isEmptyObject(turnData.turnGuidance.roadShields)
-        //rsaLog(`Node: ${node.attributes.id}`, 3);
-        //rsaLog(`Exit Shield: ${hasExitShield}`, 3);
-        //rsaLog(`Shield: ${hasShields}`, 3);
+        rsaLog(`Node: ${node.attributes.id}`, 3);
+        rsaLog(`Exit Shield: ${hasExitShield}`, 3);
+        rsaLog(`Shield: ${hasShields}`, 3);
 
         if(rsaSettings.HighNodeShields) {
             createHighlight(node, rsaSettings.HighNodeClr);
+        }
+
+        if(rsaSettings.ShowNodeShields) {
+            displayNodeShields(node, turnData);
         }
     }
     
@@ -994,14 +1028,67 @@ function isStreetCandidate(s, state, country) {
     return info;
 }
 
-function isNodeCandidate(obj) {
+function displayNodeShields(node, turnDat) {
+    if(debugLvl === 1) return;
+    const geo = node.geometry.clone();
+    const trnGuid = turnDat.getTurnGuidance();
+    const GUIDANCE = {};
 
+    // Obj of objs - RS-0: direction: string, text: string, type: shield number
+    GUIDANCE.shields = trnGuid.getRoadShields();
+    // Array of objects - 'text': string, 'type': shield number
+    if (rsaSettings.ShowExitShields) { GUIDANCE.exitsigns = trnGuid.getExitSigns(); }
+    // String
+    if (rsaSettings.ShowTurnTTS) { GUIDANCE.tts = trnGuid.getTTS(); }
+    // String
+    if (rsaSettings.ShowTowards) { GUIDANCE.towards = trnGuid.getTowards(); }
+    // String
+    if (rsaSettings.ShowVisualInst) { GUIDANCE.visualIn = trnGuid.getVisualInstruction(); }
+    if (rsaSettings.AlertTurnTTS) {}
+
+
+    const styleNode = {
+        //strokeColor: color,
+        strokeOpacity: 0.75,
+        strokeWidth: 4,
+        //fillColor: color,
+        fillOpacity: 0.75,
+        pointRadius: 3
+    }
+    const styleLabel = {
+        externalGraphic: 'https://renderer.gcp.wazestg.com/renderer/v1/signs/6',
+        graphicHeight: 30,
+        graphicWidth: 30,
+        label: 'TG',
+        fontSize: 12,
+        graphicZIndex: 700
+    };
+
+    // Array of points for line connecting node to display box
+    let points = [];
+
+    // Point coords
+    let pointNode = new OpenLayers.Geometry.Point(geo.x, geo.y);
+    points.push(pointNode);
+    // Label coords
+    let pointLabel = new OpenLayers.Geometry.Point(geo.x + LabelDistance(), geo.y + LabelDistance());
+    points.push(pointLabel);
+
+    // Point on node
+    var pointFeature = new OpenLayers.Feature.Vector(pointNode, null, styleNode);
+    rsaIconLayer.addFeatures([pointFeature]);
+
+    // Line between node and label
+    var newline = new OpenLayers.Geometry.LineString(points);
+    var lineFeature = new OpenLayers.Feature.Vector(newline, null, styleNode);
+    rsaIconLayer.addFeatures([lineFeature]);
+
+    // Label
+    var pointFeature = new OpenLayers.Feature.Vector(pointLabel, null, styleLabel);
+    rsaIconLayer.addFeatures([pointFeature]);
 }
 
-function displayNodeShields(node) {
-}
-
-function displaySegShields(geometry, countryID, shieldID, shieldText) {
+function displaySegShields(geometry, shieldID, shieldText) {
     const geo = geometry.clone();
     const geoCom = geo.components;
     const iconURL = 'https://renderer.gcp.wazestg.com/renderer/v1/signs/' + shieldID;
@@ -1011,7 +1098,7 @@ function displaySegShields(geometry, countryID, shieldID, shieldText) {
         graphicWidth: 37,
         graphicHeight: 37,
         graphicYOffset: -20,
-        graphicZIndex: 99999,
+        graphicZIndex: 650,
         label: shieldText,
         fontSize: 16
     };
@@ -1035,8 +1122,6 @@ function displaySegShields(geometry, countryID, shieldID, shieldText) {
             }
         }
     }
-
-    rsaIconLayer.setZIndex(600);
 }
 
 function createHighlight(obj, color, overSized = false) {
@@ -1055,9 +1140,12 @@ function createHighlight(obj, color, overSized = false) {
             pointRadius: 3
         }
         const styleLabel = {
-            externalGraphic: 'https://renderer.gcp.wazestg.com/renderer/v1/signs/5',
+            externalGraphic: 'https://renderer.gcp.wazestg.com/renderer/v1/signs/6',
             graphicHeight: 30,
-            graphicWidth: 30
+            graphicWidth: 30,
+            label: 'TG',
+            fontSize: 12,
+            graphicZIndex: 700
         };
 
         let points = [];
@@ -1135,9 +1223,7 @@ function LabelDistance() {
 }
 
 function rsaLog(msg, lvl) {
-    if (lvl === 2) console.log(msg);
-    if (lvl === 3) console.warn(msg);
-    if (lvl === 4) console.error(msg)
+    if (lvl <= debugLvl) console.log(msg);
 }
 
 rsaBootstrap();
