@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.16.01
+// @version      2021.04.19.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -20,7 +20,11 @@
 const debugLvl = 1;
 const GF_LINK = '1';
 const FORUM_LINK = '2';
-const RSA_UPDATE_NOTES = 'updates';
+const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
+- Mostly nternal dev changes<br>
+- Direction now shown beneath shield icons on segments<br><br>
+<b>FIXES:</b><br>
+<br><br>`;
 const iconImgs = {
     extRgtGrn: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFYAAAAyCAYAAADGMyy7AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAEZ0FNQQAAsY58+1GTAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAOxAAADsQBlSsOGwAAAtxJREFUeNrt2l9IU1EcB/DfOdc/W62cfwj7g86wepSCQGLFyAW9iIT1EBVC+lARNIgiTXqQIoWIhOipHiyCFAwiEB+01p9B/x4mSDqEXLWGaK2tFIdt93TuyLhElLue6d29vy8c7r1n3HH4cO65v3s3AqrYL7scBOghAOYGII5f3SW82WD5k+AtBLoLG2WE9ufSZPfUWe/EfC/5jdpec4owdoXv5gBGS6YJkKZI82C3ciCpUK/xXYo+mpPH237LHoc/PhAMSEUdrg3ASB+iigkhZG+ps7yTMpk24OUvcskFeyxfqqcMmAs1RNsyF+ULbiVSCF4OgFXiupqhICzCIiwGYTMXU9SvzrIqqCrdDLY864LPicWn4f6IFyZnIgj7t1yqOQHHt9drOrdt9zG4/qoH2rw3cSlQp9haAEe31mq/nKkEnuqDsLFwPcKqo1z++Tl5i/6edatKEFadl5+G4ctsDKsC0ZmZm4UjvRdSW4QVnBehYTjQc27JcU1Rxy4HrmkeEJYa11RPXgquUpcirODUbtkFp3ccRljRqLfqWlNFP8JmKaopYP+FmpCT0PG8KyM3NGpm1MYHFzns7YxUC9TMqA8DTxdUisUTPxA2XdT/1bnh71PgnwikPQbJ6q7w8K3dzKjzCX2bhGfv/VBWUAoO+1oYmRqHloEbMBb5mO4wgjlmn6l/5k34Ley7dwbWrCzS/OuBoZYCEajqLAbVMLCiUbEq4NlUXKY7VEPANm2r0x2qIWCVO7jeUA0Be2eoT3eohqhjx6NhGJoYgwKLDQbfvQZP/1XwfRha7mFlfx2rzNC+MV+q6Sn43y2ERVgMwiJsNsKyEDKIDglRwogXIQSzclNKQL6LFEITl+eSvdLsYPCztabCAgScaCJiupKT0dbHvtRrofjO8icrcslqvluNMtofAnlr+dr8qDPlq/6ksN3tZExu4J1ufuhAqwVllBDol5NyV/S81z/f+RNk9EUMEMkLUQAAAABJRU5ErkJggg==',
     extRgtBrn: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAFYAAAAyCAYAAADGMyy7AAAAIGNIUk0AAHomAACAhAAA+gAAAIDoAAB1MAAA6mAAADqYAAAXcJy6UTwAAAAEZ0FNQQAAsY58+1GTAAAAAXNSR0IArs4c6QAAAAZiS0dEAP8A/wD/oL2nkwAAAAlwSFlzAAAOxAAADsQBlSsOGwAAArFJREFUeNrt3E1oE0EYBuB3Z9OQSqpFUmi0Siw5FOnNg4JFI1hEL1qqWKhUFA8FRT2qeNCD4CHiz00UpAexoc1BUOihWAstKhQsNJYUi785LJiWYFMa7Wbj7GpgBantdtJsdr8XlswsbA4Pk5lv/yLBlKEOhDwFdBaA/bwb+rM7wDc/yh+VbynYLQUkCxIGNA2xfX1QirulYmP4OC7wTpQ3PaBYSZYDn9nbi5jekU2od3iTkY/leLnh0VPNGH/0DlPSUCcaZBUfaaQKSyZfjSDzqDhJqEJTyxbQzvhCFSELseFTQkSfU8NEITxhWqxKFIIlWIKlEGzp4or6dcP2CGoad4D5ln/JIz+fwbdXMfzMKAT7rzR23cbmQxctHbvtRBSpZ1F8enKZpgJzqmoCCLZ2Wy/0ZQ+2HL6E6vowwZrj13/+Vb5Vf493YwPBmvN9ahSLc2mqCkQnn8ti8lab8UmwokdtcgSJmwfXHNcVdWw5cF1zgrDWuK4689Jx9bqUYAUnsLMdW9uuEqxo1KbzvUbRT7AViuoK2KVQC3kVn/uvlWRBY25GTd7rwJf+6yWpFpibUdNv4ssqxbTFHMGuFPV/de6P2RSyH8YI1gqqGXfiRisyE4NGf/5rAtMPuo3jVhoPof6dufevDVxvbb3luweOGrEiUM1ZDapjYEWjUlXAs25Tk+1QHQEbPHDWdqiOgPXVhWyH6ghY5cVD26E6otyaffsck9Ejxm3uBWUayuB9o/4sdyoeVh+hM2NPjc1OoWe3CJZgKQRLsBUIK9nw/dRKDzdlEvCSJASXgNyUqRIeE4XQ5LQc4nJPAunTzdAfIm0hEyGj9VwkjlHj7e+uOgwzP9bz5i6isRxVknBlTwx3f0+zpowcQ4vGjJeWzX8EQVlynUKSj9IBWUPP7j6MF/f/AjaBMjGmYxeKAAAAAElFTkSuQmCC',
@@ -446,7 +450,7 @@ const Strings = {
         'ShowSegShields': 'Show Segment Shields on Map',
         'SegShieldMissing': 'Highlight segs that might be missing shields',
         'SegShieldError': "Highlight seg that have shields but maybe shouldn't",
-        'HighNodeShields': 'Highlight Nodes with Shields',
+        'HighNodeShields': 'Nodes with Shields (TG)',
         'ShowNodeShields': 'Show Node Shield Info',
         'ShowExitShields': 'Include turn icons (if exists)',
         'ShowTurnTTS': 'Include TTS',
@@ -938,7 +942,7 @@ function processSeg(seg, showNode = false) {
     if (segAtt.roadType === 4) return;
 
     // Display shield on map
-    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg.geometry, countryID, street.signType, street.signText);
+    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg.geometry, street.signType, street.signText, street.direction);
 
     // If candidate and has shield
     if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
@@ -1088,10 +1092,10 @@ function displayNodeShields(node, turnDat) {
     rsaIconLayer.addFeatures([pointFeature]);
 }
 
-function displaySegShields(geometry, shieldID, shieldText) {
+function displaySegShields(geometry, shieldID, shieldText, shieldDir) {
     const geo = geometry.clone();
     const geoCom = geo.components;
-    const iconURL = 'https://renderer.gcp.wazestg.com/renderer/v1/signs/' + shieldID;
+    const iconURL = `https://renderer-am.waze.com/renderer/v1/signs/${shieldID}`;
 
     const style = {
         externalGraphic: iconURL,
@@ -1102,6 +1106,13 @@ function displaySegShields(geometry, shieldID, shieldText) {
         label: shieldText,
         fontSize: 16
     };
+    const style2 = {
+        label: shieldDir !== null ? shieldDir : '',
+        fontColor: 'green',
+        labelOutlineColor: 'white',
+        labelOutlineWidth: 1,
+        fontSize: 12
+    };
 
     if (geoCom.length == 2){
         const midX = (((geoCom[0].x + geoCom[1].x) / 2) + geoCom[0].x) / 2;
@@ -1109,7 +1120,9 @@ function displaySegShields(geometry, shieldID, shieldText) {
 
         const labelPoint = new OpenLayers.Geometry.Point(midX, midY);
         const imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
-        rsaIconLayer.addFeatures([imageFeature]);
+        const labelPoint2 = new OpenLayers.Geometry.Point(midX, midY - LabelDistance());
+        const imageFeature2 = new OpenLayers.Feature.Vector(labelPoint2, null, style2);
+        rsaIconLayer.addFeatures([imageFeature, imageFeature2]);
     } else {
         for (i = 0; i < geoCom.length - 1; i++) {
             if(i%3 == 1){
@@ -1118,7 +1131,9 @@ function displaySegShields(geometry, shieldID, shieldText) {
 
                 const labelPoint = new OpenLayers.Geometry.Point(midX, midY);
                 const imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
-                rsaIconLayer.addFeatures([imageFeature]);
+                const labelPoint2 = new OpenLayers.Geometry.Point(midX, midY - LabelDistance());
+                const imageFeature2 = new OpenLayers.Feature.Vector(labelPoint2, null, style2);
+                rsaIconLayer.addFeatures([imageFeature, imageFeature2]);
             }
         }
     }
