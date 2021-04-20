@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.20.01
+// @version      2021.04.20.02
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -469,7 +469,8 @@ const Strings = {
         'ShowVisualInst': 'Include Visual Instruction',
         'SegHasDir': 'Shields with direction',
         'SegHasDirClr': 'Shields with direction',
-        'SegInvDir': 'Invert'
+        'SegInvDir': 'Shields without direction',
+        'SegInvDirClr': 'Shields without direction'
     }
 }
 
@@ -529,6 +530,8 @@ function initRSA() {
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegHasDir' />
                     <label class='rsa-label' for='rsa-SegHasDir'><span id='rsa-text-SegHasDir' /></label>
+                </div>
+                <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegInvDir' />
                     <label class='rsa-label' for='rsa-SegInvDir'><span id='rsa-text-SegInvDir' /></label>
                 </div>
@@ -583,6 +586,10 @@ function initRSA() {
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-SegHasDirClr' />
                     <label class='rsa-label' for='rsa-SegHasDirClr'><span id='rsa-text-SegHasDirClr' /></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-SegInvDirClr' />
+                    <label class='rsa-label' for='rsa-SegInvDirClr'><span id='rsa-text-SegInvDirClr' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-MissSegClr' />
@@ -650,6 +657,7 @@ async function setupOptions() {
         setValue('rsa-HighNodeClr', rsaSettings.HighNodeClr);
         setValue('rsa-MissNodeClr', rsaSettings.MissNodeClr);
         setValue('rsa-SegHasDirClr', rsaSettings.SegHasDirClr);
+        setValue('rsa-SegInvDirClr', rsaSettings.SegInvDirClr);
 
         function setChecked(ele, status) {
             $(`#${ele}`).prop('checked', status);
@@ -727,7 +735,8 @@ async function setupOptions() {
             ErrSegClr: '#cc00ff',
             HighNodeClr: '#ff00bf',
             MissNodeClr: '#ff0000',
-            SegHasDirClr: '#ffff00'
+            SegHasDirClr: '#ffff00',
+            SegInvDirClr: '#66ffff'
         }
 
         rsaSettings = defaultSettings;
@@ -773,7 +782,8 @@ async function loadSettings() {
         ErrSegClr: '#cc00ff',
         HighNodeClr: '#ff00bf',
         MissNodeClr: '#ff0000',
-        SegHasDirClr: '#ffff00'
+        SegHasDirClr: '#ffff00',
+        SegInvDirClr: '#66ffff'
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -814,7 +824,8 @@ async function saveSettings() {
         ErrSegClr,
         HighNodeClr,
         MissNodeClr,
-        SegHasDirClr
+        SegHasDirClr,
+        SegInvDirClr
     } = rsaSettings;
 
     const localSettings = {
@@ -839,7 +850,8 @@ async function saveSettings() {
         ErrSegClr,
         HighNodeClr,
         MissNodeClr,
-        SegHasDirClr
+        SegHasDirClr,
+        SegInvDirClr
     };
 
     /* // Grab keyboard shortcuts and store them for saving
@@ -995,11 +1007,8 @@ function processSeg(seg, showNode = false) {
     if (!candidate.isCandidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg, rsaSettings.ErrSegClr);
 
     // Highlight seg shields with direction
-    if (hasShield && street.direction && rsaSettings.SegHasDir && !rsaSettings.SegInvDir) {
-        createHighlight(seg, rsaSettings.SegHasDirClr);
-    } else if (hasShield && !street.direction && rsaSettings.SegHasDir && rsaSettings.SegInvDir) {
-        createHighlight(seg, rsaSettings.SegHasDirClr);
-    }
+    if (hasShield && street.direction && rsaSettings.SegHasDir) createHighlight(seg, rsaSettings.SegHasDirClr);
+    if (hasShield && !street.direction && rsaSettings.SegInvDir) createHighlight(seg, rsaSettings.SegInvDirClr);
 
     if (showNode) {
         let toNode = W.model.nodes.getObjectById(segAtt.toNode);
