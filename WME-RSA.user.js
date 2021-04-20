@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.19.01
+// @version      2021.04.20.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -21,8 +21,10 @@ const debugLvl = 1;
 const GF_LINK = '1';
 const FORUM_LINK = '2';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Mostly nternal dev changes<br>
-- Direction now shown beneath shield icons on segments<br><br>
+- Highlight segs where shields have direction configured (Can be inverted)<br>
+- Direction now shown beneath shield icons on segments<br>
+- Improved shield icon rendering logic<br>
+- Moved highlight colors to their own section<br><br>
 <b>FIXES:</b><br>
 <br><br>`;
 const iconImgs = {
@@ -446,20 +448,28 @@ const RoadAbbr = {
 const Strings = {
     'en-us': {
         'enableScript': 'Script enabled',
-        'HighSegShields': 'Highlight Segments with Shields',
+        'HighSegShields': 'Segments with Shields',
+        'HighSegShieldsClr': 'Segments with Shields',
         'ShowSegShields': 'Show Segment Shields on Map',
-        'SegShieldMissing': 'Highlight segs that might be missing shields',
-        'SegShieldError': "Highlight seg that have shields but maybe shouldn't",
+        'SegShieldMissing': 'Segments that might be missing shields',
+        'SegShieldMissingClr': 'Segments that might be missing shields',
+        'SegShieldError': "Segments that have shields but maybe shouldn't",
+        'SegShieldErrorClr': "Segments that have shields but maybe shouldn't",
         'HighNodeShields': 'Nodes with Shields (TG)',
+        'HighNodeShieldsClr': 'Nodes with Shields (TG)',
         'ShowNodeShields': 'Show Node Shield Info',
         'ShowExitShields': 'Include turn icons (if exists)',
         'ShowTurnTTS': 'Include TTS',
         'AlertTurnTTS': 'Alert if TTS is different from default',
-        'NodeShieldMissing': 'Highlight nodes that might be missing shields',
+        'NodeShieldMissing': 'Nodes that might be missing shields',
+        'NodeShieldMissingClr': 'Nodes that might be missing shields',
         'resetSettings': 'Reset to default settings',
         'disabledFeat': '(Feature not configured for this country)',
         'ShowTowards': 'Include Towards (if exists)',
-        'ShowVisualInst': 'Include Visual Instruction'
+        'ShowVisualInst': 'Include Visual Instruction',
+        'SegHasDir': 'Shields with direction',
+        'SegHasDirClr': 'Shields with direction',
+        'SegInvDir': 'Invert'
     }
 }
 
@@ -468,8 +478,6 @@ let UpdateObj;
 let rsaMapLayer;
 let rsaIconLayer;
 let LANG;
-let iconHeight = 30;
-let iconWidth = 50;
 
 console.log('RSA: initializing...');
 
@@ -493,7 +501,8 @@ function initRSA() {
         '.rsa-section-wrapper {display:block;width:100%;padding:4px;}',
         '.rsa-section-wrapper.border {border-bottom:1px solid grey;margin-bottom:5px;}',
         '.rsa-option-container {padding:3px;}',
-        '.rsa-option-container.sub {margin-left:10px;}',
+        '.rsa-option-container.no-display {display:none;}',
+        '.rsa-option-container.sub {display:none;margin-left:10px;}',
         'input[type="checkbox"].rsa-checkbox {display:inline-block;position:relative;top:3px;vertical-align:top;margin:0;}',
         'input[type="color"].rsa-color-input {display:inline-block;position:relative;width:20px;margin-left:2px;padding:0px 1px;border:0px;vertical-align:top;}',
         'input[type="color"].rsa-color-input:focus {outline-width:0;}',
@@ -515,22 +524,25 @@ function initRSA() {
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-HighSegShields' />
-                    <input type=color class='rsa-color-input' id='rsa-HighSegClr' />
                     <label class='rsa-label' for='rsa-HighSegShields'><span id='rsa-text-HighSegShields' /></label>
                 </div>
                 <div class='rsa-option-container'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-SegHasDir' />
+                    <label class='rsa-label' for='rsa-SegHasDir'><span id='rsa-text-SegHasDir' /></label>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-SegInvDir' />
+                    <label class='rsa-label' for='rsa-SegInvDir'><span id='rsa-text-SegInvDir' /></label>
+                </div>
+                <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldMissing' />
-                    <input type=color class='rsa-color-input' id='rsa-MissSegClr' />
                     <label class='rsa-label' for='rsa-SegShieldMissing'><span id='rsa-text-SegShieldMissing' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldError' />
-                    <input type=color class='rsa-color-input' id='rsa-ErrSegClr' />
                     <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError' /></label>
                 </div>
             </div>
             <div style='border-top:2px solid black;'>
-                <div class='rsa-option-container'>
+                <div class='rsa-option-container no-display'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowNodeShields' />
                     <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields' /></label>
                 </div>
@@ -550,19 +562,43 @@ function initRSA() {
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowVisualInst' />
                     <label class='rsa-label' for='rsa-ShowVisualInst'><span id='rsa-text-ShowVisualInst' /></label>
                 </div>
-                <div class='rsa-option-container sub' style='display:none;'>
+                <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-AlertTurnTTS' />
                     <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-HighNodeShields' />
-                    <input type=color class='rsa-color-input' id='rsa-HighNodeClr' />
                     <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields' /></label>
                 </div>
-                <div class='rsa-option-container' style='display:none;'>
+                <div class='rsa-option-container no-display'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
-                    <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
                     <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing' /></label>
+                </div>
+            </div>
+            <div style='border-top:2px solid black;'>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-HighSegClr' />
+                    <label class='rsa-label' for='rsa-HighSegClr'><span id='rsa-text-HighSegShieldsClr' /></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-SegHasDirClr' />
+                    <label class='rsa-label' for='rsa-SegHasDirClr'><span id='rsa-text-SegHasDirClr' /></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-MissSegClr' />
+                    <label class='rsa-label' for='rsa-MissSegClr'><span id='rsa-text-SegShieldMissingClr' /></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-ErrSegClr' />
+                    <label class='rsa-label' for='rsa-ErrSegClr'><span id='rsa-text-SegShieldErrorClr' /></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-HighNodeClr' />
+                    <label class='rsa-label' for='rsa-HighNodeClr'><span id='rsa-text-HighNodeShieldsClr' /></label>
+                </div>
+                <div class='rsa-option-container no-display'>
+                    <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
+                    <label class='rsa-label' for='rsa-MissNodeClr'><span id='rsa-text-NodeShieldMissingClr' /></label>
                 </div>
             </div>
             <div style='border-top:2px solid black;'>
@@ -570,11 +606,6 @@ function initRSA() {
                     <input type=button id='rsa-resetSettings' value='Reset Settings' />
                 </div>
             </div>
-            <br>
-            <img src=${iconImgs.extRgtGrn} height=${iconHeight} width=${iconWidth}>
-            <img src=${iconImgs.extRgtBrn} height=${iconHeight} width=${iconWidth}>
-            <img src=${iconImgs.extLftGrn} height=${iconHeight} width=${iconWidth}>
-            <img src=${iconImgs.extLftBrn} height=${iconHeight} width=${iconWidth}>
         </div>`
     ].join(' '));
     
@@ -611,11 +642,14 @@ async function setupOptions() {
         setChecked('rsa-ShowTowards', rsaSettings.ShowTowards);
         setChecked('rsa-ShowVisualInst', rsaSettings.ShowVisualInst);
         setChecked('rsa-NodeShieldMissing', rsaSettings.NodeShieldMissing);
+        setChecked('rsa-SegHasDir', rsaSettings.SegHasDir);
+        setChecked('rsa-SegInvDir', rsaSettings.SegInvDir);
         setValue('rsa-HighSegClr', rsaSettings.HighSegClr);
         setValue('rsa-MissSegClr', rsaSettings.MissSegClr);
         setValue('rsa-ErrSegClr', rsaSettings.ErrSegClr);
         setValue('rsa-HighNodeClr', rsaSettings.HighNodeClr);
         setValue('rsa-MissNodeClr', rsaSettings.MissNodeClr);
+        setValue('rsa-SegHasDirClr', rsaSettings.SegHasDirClr);
 
         function setChecked(ele, status) {
             $(`#${ele}`).prop('checked', status);
@@ -626,17 +660,12 @@ async function setupOptions() {
             inputElem.attr('value', value);
             // inputElem.css('border', `1px solid ${value}`);
         }
-
-        if (!rsaSettings.ShowNodeShields) {
-            $('.rsa-option-container.sub').hide();
-        } else {
-            $('.rsa-option-container.sub').show();
-        }
     }
 
     // Register event listeners
     WazeWrap.Events.register('selectionchanged', null, tryScan);
     WazeWrap.Events.register('moveend', null, tryScan);
+    WazeWrap.Events.register('afteraction', null, tryScan);
     WazeWrap.Events.register('moveend', null, checkOptions);
 
     setEleStatus();
@@ -671,29 +700,34 @@ async function setupOptions() {
         removeHighlights();
         tryScan();
     });
-    $('#rsa-ShowNodeShields').click(function() {
-        if (!getId('rsa-ShowNodeShields').checked) $('.rsa-option-container.sub').hide();
-        else $('.rsa-option-container.sub').show();
-    });
+    // $('#rsa-ShowNodeShields').click(function() {
+    //     if (!getId('rsa-ShowNodeShields').checked) $('.rsa-option-container.sub').hide();
+    //     else $('.rsa-option-container.sub').show();
+    // });
     $('#rsa-resetSettings').click(function() {
         const defaultSettings = {
             lastSaveAction: 0,
             enableScript: true,
-            HighSegShields: true,
+            HighSegShields: false,
             ShowSegShields: true,
-            SegShieldMissing: true,
-            SegShieldError: true,
+            SegShieldMissing: false,
+            SegShieldError: false,
+            SegHasDir: false,
+            SegInvDir: false,
             HighNodeShields: true,
-            ShowNodeShields: true,
-            ShowExitShields: true,
-            ShowTurnTTS: true,
-            AlertTurnTTS: true,
-            NodeShieldMissing: true,
+            ShowNodeShields: false,
+            ShowExitShields: false,
+            ShowTurnTTS: false,
+            AlertTurnTTS: false,
+            ShowTowards: false,
+            ShowVisualInst: false,
+            NodeShieldMissing: false,
             HighSegClr: '#0066ff',
             MissSegClr: '#00ff00',
             ErrSegClr: '#cc00ff',
             HighNodeClr: '#ff00bf',
-            MissNodeClr: '#ff0000'
+            MissNodeClr: '#ff0000',
+            SegHasDirClr: '#ffff00'
         }
 
         rsaSettings = defaultSettings;
@@ -720,23 +754,26 @@ async function loadSettings() {
     const defaultSettings = {
         lastSaveAction: 0,
         enableScript: true,
-        HighSegShields: true,
+        HighSegShields: false,
         ShowSegShields: true,
-        SegShieldMissing: true,
-        SegShieldError: true,
+        SegShieldMissing: false,
+        SegShieldError: false,
+        SegHasDir: false,
+        SegInvDir: false,
         HighNodeShields: true,
         ShowNodeShields: false,
-        ShowExitShields: true,
-        ShowTurnTTS: true,
-        AlertTurnTTS: true,
-        ShowTowards: true,
-        ShowVisualInst: true,
-        NodeShieldMissing: true,
+        ShowExitShields: false,
+        ShowTurnTTS: false,
+        AlertTurnTTS: false,
+        ShowTowards: false,
+        ShowVisualInst: false,
+        NodeShieldMissing: false,
         HighSegClr: '#0066ff',
         MissSegClr: '#00ff00',
         ErrSegClr: '#cc00ff',
         HighNodeClr: '#ff00bf',
-        MissNodeClr: '#ff0000'
+        MissNodeClr: '#ff0000',
+        SegHasDirClr: '#ffff00'
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -765,6 +802,8 @@ async function saveSettings() {
         HighNodeShields,
         ShowNodeShields,
         ShowExitShields,
+        SegHasDir,
+        SegInvDir,
         ShowTurnTTS,
         AlertTurnTTS,
         ShowTowards,
@@ -774,7 +813,8 @@ async function saveSettings() {
         MissSegClr,
         ErrSegClr,
         HighNodeClr,
-        MissNodeClr
+        MissNodeClr,
+        SegHasDirClr
     } = rsaSettings;
 
     const localSettings = {
@@ -787,6 +827,8 @@ async function saveSettings() {
         HighNodeShields,
         ShowNodeShields,
         ShowExitShields,
+        SegHasDir,
+        SegInvDir,
         ShowTurnTTS,
         AlertTurnTTS,
         ShowTowards,
@@ -796,7 +838,8 @@ async function saveSettings() {
         MissSegClr,
         ErrSegClr,
         HighNodeClr,
-        MissNodeClr
+        MissNodeClr,
+        SegHasDirClr
     };
 
     /* // Grab keyboard shortcuts and store them for saving
@@ -910,10 +953,8 @@ function tryScan() {
     removeHighlights();
     let selFea = W.selectionManager.getSelectedFeatures();
     if (selFea && selFea.length > 0) {
-        if (selFea.model.type === 'segment') scanSeg(selFea.model, true);
+        // if (selFea.model.type === 'segment') scanSeg(selFea.model, true);
     } else {
-        //rsaLog('General Scan', 2);
-
         // Scan all segments on screen
         if(rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields) {
             _.each(W.model.segments.getObjectArray(), s => {
@@ -942,7 +983,7 @@ function processSeg(seg, showNode = false) {
     if (segAtt.roadType === 4) return;
 
     // Display shield on map
-    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg.geometry, street.signType, street.signText, street.direction);
+    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
 
     // If candidate and has shield
     if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
@@ -952,6 +993,13 @@ function processSeg(seg, showNode = false) {
 
     // If not candidate and has shield
     if (!candidate.isCandidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg, rsaSettings.ErrSegClr);
+
+    // Highlight seg shields with direction
+    if (hasShield && street.direction && rsaSettings.SegHasDir && !rsaSettings.SegInvDir) {
+        createHighlight(seg, rsaSettings.SegHasDirClr);
+    } else if (hasShield && !street.direction && rsaSettings.SegHasDir && rsaSettings.SegInvDir) {
+        createHighlight(seg, rsaSettings.SegHasDirClr);
+    }
 
     if (showNode) {
         let toNode = W.model.nodes.getObjectById(segAtt.toNode);
@@ -1092,51 +1140,59 @@ function displayNodeShields(node, turnDat) {
     rsaIconLayer.addFeatures([pointFeature]);
 }
 
-function displaySegShields(geometry, shieldID, shieldText, shieldDir) {
-    const geo = geometry.clone();
-    const geoCom = geo.components;
+function displaySegShields(segment, shieldID, shieldText, shieldDir) {
+    if (W.map.getZoom() < 2) return;
+
     const iconURL = `https://renderer-am.waze.com/renderer/v1/signs/${shieldID}`;
+    let SegmentPoints = [];
+    let oldparam = {};
+    let labelDis = LabelDistance();
 
-    const style = {
-        externalGraphic: iconURL,
-        graphicWidth: 37,
-        graphicHeight: 37,
-        graphicYOffset: -20,
-        graphicZIndex: 650,
-        label: shieldText,
-        fontSize: 16
-    };
-    const style2 = {
-        label: shieldDir !== null ? shieldDir : '',
-        fontColor: 'green',
-        labelOutlineColor: 'white',
-        labelOutlineWidth: 1,
-        fontSize: 12
-    };
+    oldparam.x = null;
+    oldparam.y = null;
+    let AtLeastOne = false;
+    $.each(segment.geometry.getVertices(), function(idx, param) {
+        // Build a new segment with same geometry
+        SegmentPoints.push(new OpenLayers.Geometry.Point(param.x, param.y));
 
-    if (geoCom.length == 2){
-        const midX = (((geoCom[0].x + geoCom[1].x) / 2) + geoCom[0].x) / 2;
-        const midY = (((geoCom[0].y + geoCom[1].y) / 2) + geoCom[0].y) / 2;
+        // Shield icon style
+        const style = {
+            externalGraphic: iconURL,
+            graphicWidth: 37,
+            graphicHeight: 37,
+            graphicYOffset: -20,
+            graphicZIndex: 650,
+            label: shieldText,
+            fontSize: 16
+        };
+        // Direction label styel
+        const style2 = {
+            label: shieldDir !== null ? shieldDir : '',
+            fontColor: 'green',
+            labelOutlineColor: 'white',
+            labelOutlineWidth: 1,
+            fontSize: 12
+        };
 
-        const labelPoint = new OpenLayers.Geometry.Point(midX, midY);
-        const imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
-        const labelPoint2 = new OpenLayers.Geometry.Point(midX, midY - LabelDistance());
-        const imageFeature2 = new OpenLayers.Feature.Vector(labelPoint2, null, style2);
-        rsaIconLayer.addFeatures([imageFeature, imageFeature2]);
-    } else {
-        for (i = 0; i < geoCom.length - 1; i++) {
-            if(i%3 == 1){
-                const midX = (((geoCom[i].x + geoCom[i+1].x) / 2) + geoCom[i].x) / 2;
-                const midY = (((geoCom[i].y + geoCom[i+1].y) / 2) + geoCom[i].y) / 2;
-
-                const labelPoint = new OpenLayers.Geometry.Point(midX, midY);
-                const imageFeature = new OpenLayers.Feature.Vector(labelPoint, null, style);
-                const labelPoint2 = new OpenLayers.Geometry.Point(midX, midY - LabelDistance());
-                const imageFeature2 = new OpenLayers.Feature.Vector(labelPoint2, null, style2);
-                rsaIconLayer.addFeatures([imageFeature, imageFeature2]);
+        if (oldparam.x !== null && oldparam.y !== null) {
+            if ( Math.abs(oldparam.x - param.x) > labelDis.space || Math.abs(oldparam.y - param.y) > labelDis.space  || AtLeastOne === false) {
+                let centerparam = {};
+                centerparam.x = ((oldparam.x + param.x) / 2);
+                centerparam.y = ((oldparam.y + param.y) / 2);
+                if ( Math.abs(centerparam.x - param.x) > labelDis.space || Math.abs(centerparam.y - param.y) > labelDis.space || AtLeastOne === false) {
+                    LabelPoint = new OpenLayers.Geometry.Point(centerparam.x, centerparam.y);
+                    const pointFeature = new OpenLayers.Feature.Vector(LabelPoint, null, style);
+                    // Create point for direction label below shield icon
+                    const labelPoint2 = new OpenLayers.Geometry.Point(centerparam.x, centerparam.y - labelDis.label);
+                    const imageFeature2 = new OpenLayers.Feature.Vector(labelPoint2, null, style2);
+                    rsaIconLayer.addFeatures([pointFeature, imageFeature2]);
+                    AtLeastOne = true;
+                }
             }
         }
-    }
+        oldparam.x = param.x;
+        oldparam.y = param.y;
+    });
 }
 
 function createHighlight(obj, color, overSized = false) {
@@ -1204,34 +1260,45 @@ function removeHighlights() {
 }
 
 function LabelDistance() {
-    let label_distance;
+    // Return object with two variables - label is the distance used to place the direction below the icon,
+    // space is the space between geo points needed to render another icon
+    let label_distance = {};
     switch (W.map.getOLMap().getZoom()) {
         case 9:
-            label_distance = 2;
+            label_distance.label = 2;
+            label_distance.space = 20;
             break;
         case 8:
-            label_distance = 4;
+            label_distance.label = 4;
+            label_distance.space = 20;
             break;
         case 7:
-            label_distance = 7;
+            label_distance.label = 7;
+            label_distance.space = 20;
             break;
         case 6:
-            label_distance = 12;
+            label_distance.label = 12;
+            label_distance.space = 30;
             break;
         case 5:
-            label_distance = 20;
+            label_distance.label = 30;
+            label_distance.space = 30;
             break;
         case 4:
-            label_distance = 40;
+            label_distance.label = 40;
+            label_distance.space = 40;
             break;
         case 3:
-            label_distance = 70;
+            label_distance.label = 70;
+            label_distance.space = 70;
             break;
         case 2:
-            label_distance = 150;
+            label_distance.label = 150;
+            label_distance.space = 200;
             break;
         case 1:
-            label_distance = 200;
+            label_distance.label = 200;
+            label_distance.space = 250;
             break;
     }
     return label_distance;
