@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.20.02
+// @version      2021.04.20.03
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -446,6 +446,32 @@ const RoadAbbr = {
     }
 }
 const Strings = {
+    'en': {
+        'enableScript': 'Script enabled',
+        'HighSegShields': 'Segments with Shields',
+        'HighSegShieldsClr': 'Segments with Shields',
+        'ShowSegShields': 'Show Segment Shields on Map',
+        'SegShieldMissing': 'Segments that might be missing shields',
+        'SegShieldMissingClr': 'Segments that might be missing shields',
+        'SegShieldError': "Segments that have shields but maybe shouldn't",
+        'SegShieldErrorClr': "Segments that have shields but maybe shouldn't",
+        'HighNodeShields': 'Nodes with Shields (TG)',
+        'HighNodeShieldsClr': 'Nodes with Shields (TG)',
+        'ShowNodeShields': 'Show Node Shield Info',
+        'ShowExitShields': 'Include turn icons (if exists)',
+        'ShowTurnTTS': 'Include TTS',
+        'AlertTurnTTS': 'Alert if TTS is different from default',
+        'NodeShieldMissing': 'Nodes that might be missing shields',
+        'NodeShieldMissingClr': 'Nodes that might be missing shields',
+        'resetSettings': 'Reset to default settings',
+        'disabledFeat': '(Feature not configured for this country)',
+        'ShowTowards': 'Include Towards (if exists)',
+        'ShowVisualInst': 'Include Visual Instruction',
+        'SegHasDir': 'Shields with direction',
+        'SegHasDirClr': 'Shields with direction',
+        'SegInvDir': 'Shields without direction',
+        'SegInvDirClr': 'Shields without direction'
+    },
     'en-us': {
         'enableScript': 'Script enabled',
         'HighSegShields': 'Segments with Shields',
