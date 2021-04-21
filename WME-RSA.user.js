@@ -23,7 +23,7 @@ const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
 - Configured shields for Canada<br><br>
 <b>FIXES:</b><br>
-- <br><br>`;
+- Shield text is now rendered via Waze, so text should scale and fit appropriately<br><br>`;
 
 const RoadAbbr = {
     // Canada
@@ -1194,7 +1194,7 @@ function displayNodeShields(node, turnDat) {
 function displaySegShields(segment, shieldID, shieldText, shieldDir) {
     if (W.map.getZoom() < 2) return;
 
-    const iconURL = `https://renderer-am.waze.com/renderer/v1/signs/${shieldID}`;
+    const iconURL = `https://renderer-am.waze.com/renderer/v1/signs/${shieldID}?text=${shieldText}`;
     let SegmentPoints = [];
     let oldparam = {};
     let labelDis = LabelDistance();
@@ -1212,9 +1212,7 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
             graphicWidth: 37,
             graphicHeight: 37,
             graphicYOffset: -20,
-            graphicZIndex: 650,
-            label: shieldText,
-            fontSize: 16
+            graphicZIndex: 650
         };
         // Direction label styel
         const style2 = {
@@ -1263,11 +1261,9 @@ function createHighlight(obj, color, overSized = false) {
             pointRadius: 3
         }
         const styleLabel = {
-            externalGraphic: 'https://renderer.gcp.wazestg.com/renderer/v1/signs/6',
+            externalGraphic: 'https://renderer.gcp.wazestg.com/renderer/v1/signs/6?text=TG',
             graphicHeight: 30,
             graphicWidth: 30,
-            label: 'TG',
-            fontSize: 12,
             graphicZIndex: 700
         };
 
