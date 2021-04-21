@@ -21,7 +21,7 @@ const debugLvl = 1;
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Configured shields for Canada<br><br>
+- Configured (some) shields for Canada<br><br>
 <b>FIXES:</b><br>
 - Shield text is now rendered via Waze, so text should scale and fit appropriately<br><br>`;
 
