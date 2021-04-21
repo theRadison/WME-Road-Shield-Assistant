@@ -18,8 +18,8 @@
 /* global require */
 
 const debugLvl = 1;
-const GF_LINK = '1';
-const FORUM_LINK = '2';
+const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
+const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
 - <br><br>
 <b>FIXES:</b><br>
