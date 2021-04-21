@@ -543,7 +543,11 @@ function initRSA() {
     const $rsaTab = $('<div>');
     $rsaTab.html = ([
         `<div class='rsa-wrapper' id='rsa-tab-wrapper'>
-            <div style='margin-bottom:5px;border-bottom:1px solid black;'><span style='font-weight:bold;'>Road Shield Assistant</span> - v${GM_info.script.version}</div>
+            <div style='margin-bottom:5px;border-bottom:1px solid black;'>
+                <span style='font-weight:bold;'>
+                    <a href='https://www.waze.com/forum/viewtopic.php?f=1851&t=315748' target='_blank' style='text-decoration:none;'>Road Shield Assistant</a>
+                    </span> - v${GM_info.script.version}
+            </div>
             <div class='rsa-option-container'>
                 <input type=checkbox class='rsa-checkbox' id='rsa-enableScript' />
                 <label class='rsa-label' for='rsa-enableScript'><span id='rsa-text-enableScript' /></label>
