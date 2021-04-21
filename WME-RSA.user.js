@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.20.04
+// @version      2021.04.21.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -21,12 +21,20 @@ const debugLvl = 1;
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- <br><br>
+- Configured shields for Canada<br><br>
 <b>FIXES:</b><br>
 - <br><br>`;
 
 const RoadAbbr = {
     // Canada
+    // 5000: Trans-Canada Hwy
+    // 5063: Ontario - Regional Hwy - Generic
+    40: {
+        'Ontario': {
+            'Hwy': 5063,
+            'Trans-Canada Hwy': 5000
+        }
+    },
 
     // US
     235: {
