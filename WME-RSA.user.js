@@ -463,14 +463,17 @@ const Strings = {
         'AlertTurnTTS': 'Alert if TTS is different from default',
         'NodeShieldMissing': 'Nodes that might be missing shields',
         'NodeShieldMissingClr': 'Nodes that might be missing shields',
-        'resetSettings': 'Reset to default settings',
+        'resetSettings': 'Reset Settings',
         'disabledFeat': '(Feature not configured for this country)',
         'ShowTowards': 'Include Towards (if exists)',
         'ShowVisualInst': 'Include Visual Instruction',
         'SegHasDir': 'Shields with direction',
         'SegHasDirClr': 'Shields with direction',
         'SegInvDir': 'Shields without direction',
-        'SegInvDirClr': 'Shields without direction'
+        'SegInvDirClr': 'Shields without direction',
+        'IconHead': 'Map Icons',
+        'HighlightHead': 'Highlights',
+        'HighlightColors': 'Highlight Colors'
     },
     'en-us': {
         'enableScript': 'Script enabled',
