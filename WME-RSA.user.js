@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assisstant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.21.01
+// @version      2021.04.28.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -21,9 +21,9 @@ const debugLvl = 1;
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Configured (some) shields for Canada<br><br>
+- Toggle added to show ramp icons on ramps<br><br>
 <b>FIXES:</b><br>
-- Shield text is now rendered via Waze, so text should scale and fit appropriately<br><br>`;
+- <br><br>`;
 
 const RoadAbbr = {
     // Canada
@@ -473,7 +473,8 @@ const Strings = {
         'SegInvDirClr': 'Shields without direction',
         'IconHead': 'Map Icons',
         'HighlightHead': 'Highlights',
-        'HighlightColors': 'Highlight Colors'
+        'HighlightColors': 'Highlight Colors',
+        'ShowRamps': 'Include Ramps'
     },
     'en-us': {
         'enableScript': 'Script enabled',
@@ -502,7 +503,8 @@ const Strings = {
         'SegInvDirClr': 'Shields without direction',
         'IconHead': 'Map Icons',
         'HighlightHead': 'Highlights',
-        'HighlightColors': 'Highlight Colors'
+        'HighlightColors': 'Highlight Colors',
+        'ShowRamps': 'Include Ramps'
     }
 }
 
@@ -560,6 +562,10 @@ function initRSA() {
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowSegShields' />
                     <label class='rsa-label' for='rsa-ShowSegShields'><span id='rsa-text-ShowSegShields' /></label>
+                </div>
+                <div class='rsa-option-container' style='padding:0 3px 3px 15px;'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowRamps' />
+                    <label class='rsa-label' for='rsa-ShowRamps'><span id='rsa-text-ShowRamps' /></label>
                 </div>
             </div>
             <div id='rsa-text-HighlightHead' class='rsa-header' />
@@ -692,6 +698,7 @@ async function setupOptions() {
         setChecked('rsa-NodeShieldMissing', rsaSettings.NodeShieldMissing);
         setChecked('rsa-SegHasDir', rsaSettings.SegHasDir);
         setChecked('rsa-SegInvDir', rsaSettings.SegInvDir);
+        setChecked('rsa-ShowRamps', rsaSettings.ShowRamps);
         setValue('rsa-HighSegClr', rsaSettings.HighSegClr);
         setValue('rsa-MissSegClr', rsaSettings.MissSegClr);
         setValue('rsa-ErrSegClr', rsaSettings.ErrSegClr);
@@ -826,7 +833,8 @@ async function loadSettings() {
         HighNodeClr: '#ff00bf',
         MissNodeClr: '#ff0000',
         SegHasDirClr: '#ffff00',
-        SegInvDirClr: '#66ffff'
+        SegInvDirClr: '#66ffff',
+        ShowRamps: true
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -868,7 +876,8 @@ async function saveSettings() {
         HighNodeClr,
         MissNodeClr,
         SegHasDirClr,
-        SegInvDirClr
+        SegInvDirClr,
+        ShowRamps
     } = rsaSettings;
 
     const localSettings = {
@@ -894,7 +903,8 @@ async function saveSettings() {
         HighNodeClr,
         MissNodeClr,
         SegHasDirClr,
-        SegInvDirClr
+        SegInvDirClr,
+        ShowRamps
     };
 
     /* // Grab keyboard shortcuts and store them for saving
@@ -1041,7 +1051,7 @@ function processSeg(seg, showNode = false) {
     let candidate = isStreetCandidate(street, stateName, countryID);
     let hasShield = street.signType !== null;
 
-    if (segAtt.roadType === 4) return;
+    if (segAtt.roadType === 4 && !rsaSettings.ShowRamps) return;
 
     // Display shield on map
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
@@ -1098,9 +1108,6 @@ function processNode(node, seg1, seg2) {
     if (hasGuidence) {
         let hasExitShield = turnData.turnGuidance.exitSigns.length > 0;
         let hasShields = !$.isEmptyObject(turnData.turnGuidance.roadShields)
-        rsaLog(`Node: ${node.attributes.id}`, 3);
-        rsaLog(`Exit Shield: ${hasExitShield}`, 3);
-        rsaLog(`Shield: ${hasShields}`, 3);
 
         if(rsaSettings.HighNodeShields) {
             createHighlight(node, rsaSettings.HighNodeClr);
@@ -1252,9 +1259,7 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
 }
 
 function createHighlight(obj, color, overSized = false) {
-    // rsaLog('Highlights fired', 2);
     const geo = obj.geometry.clone();
-    // console.log('geo ' + geo);
     let isNode = obj.type == 'node';
     let labelDis = LabelDistance();
 
@@ -1357,10 +1362,6 @@ function LabelDistance() {
             break;
     }
     return label_distance;
-}
-
-function rsaLog(msg, lvl) {
-    if (lvl <= debugLvl) console.log(msg);
 }
 
 rsaBootstrap();
