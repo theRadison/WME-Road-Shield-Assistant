@@ -187,7 +187,8 @@ const RoadAbbr = {
             "CH-": 2002,
             "CR-": 2002,
             "SH-": 2053,
-            "SR-": 2053
+            "SR-": 2053,
+            "MD-": 2053
         },
         "Massachusetts": {
             'I-': 5,
