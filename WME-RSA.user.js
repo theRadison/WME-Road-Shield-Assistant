@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.05.03.01
+// @version      2021.05.05.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -21,9 +21,9 @@ const debugLvl = 1;
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Toggle added to show ramp icons on ramps<br><br>
+- <br><br>
 <b>FIXES:</b><br>
-- <br><br>`;
+- Updated Regex checks for United States<br><br>`;
 
 const RoadAbbr = {
     // Canada
