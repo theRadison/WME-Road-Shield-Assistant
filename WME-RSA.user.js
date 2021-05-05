@@ -217,8 +217,6 @@ const RoadAbbr = {
         "Mississippi": {
             'I-': 5,
             'US-': 6,
-            "CH-": 2002,
-            "CR-": 2002,
             "SH-": 7,
             "SR-": 7,
             "MS-": 7
@@ -321,8 +319,6 @@ const RoadAbbr = {
         "Oklahoma": {
             'I-': 5,
             'US-': 6,
-            "CH-": 2002,
-            "CR-": 2002,
             "SH-": 2097,
             "SR-": 2097
         },
@@ -379,8 +375,6 @@ const RoadAbbr = {
         "Texas": {
             'I-': 5,
             'US-': 6,
-            "CH-": 2002,
-            "CR-": 2002,
             "SH-": 2117,
             "SR-": 2117
         },
