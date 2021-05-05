@@ -1,7 +1,7 @@
 // ==UserScript==
-// @name         WME Road Shield Assisstant
+// @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.04.28.01
+// @version      2021.05.03.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -187,7 +187,8 @@ const RoadAbbr = {
             "CH-": 2002,
             "CR-": 2002,
             "SH-": 2053,
-            "SR-": 2053
+            "SR-": 2053,
+            "MD-": 2053
         },
         "Massachusetts": {
             'I-': 5,
