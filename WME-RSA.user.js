@@ -21,7 +21,7 @@ const debugLvl = 1;
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- <br><br>
+- Added translations for LATAM Spanish<br><br>
 <b>FIXES:</b><br>
 - Updated Regex checks for United States<br><br>`;
 
@@ -500,6 +500,36 @@ const Strings = {
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps'
+    },
+    'es-419' : {
+        'enableScript': 'Script habilitado',
+        'HighSegShields': 'Segmentos con escudos',
+        'HighSegShieldsClr': 'Segmentos con escudos',
+        'ShowSegShields': 'Mostrar escudos de segmentos en el mapa',
+        'SegShieldMissing': 'Segmentos a los que les pueden faltar escudos',
+        'SegShieldMissingClr': 'Segmentos a los que les pueden faltar escudos',
+        'SegShieldError': "Segmentos que tienen escudos y quizá no deberían",
+        'SegShieldErrorClr': "Segmentos que tienen escudos y quizá no deberían",
+        'HighNodeShields': 'Nodos con escudos (TG)',
+        'HighNodeShieldsClr': 'Nodos con escudos (TG)',
+        'ShowNodeShields': 'Mostrar Info de Escudo en Nodo',
+        'ShowExitShields': 'Incluir iconos de giro (si existen)',
+        'ShowTurnTTS': 'Incuir TTS',
+        'AlertTurnTTS': 'Alertar si TTS fue modificado',
+        'NodeShieldMissing': 'Nodos a los que les pueden faltar escudos',
+        'NodeShieldMissingClr': 'Nodos a los que les pueden faltar escudos',
+        'resetSettings': 'Reiniciar ajustes',
+        'disabledFeat': '(Funcionalidad no configurada para ese país)',
+        'ShowTowards': 'Incluir dirección (si existe)',
+        'ShowVisualInst': 'Incluir instrucción visual',
+        'SegHasDir': 'Escudos con dirección',
+        'SegHasDirClr': 'Escudos con dirección',
+        'SegInvDir': 'Escudos sin dirección',
+        'SegInvDirClr': 'Escudos sin dirección',
+        'IconHead': 'Iconos en mapa',
+        'HighlightHead': 'Destacar',
+        'HighlightColors': 'Reseña de Colores',
+        'ShowRamps': 'Incluir Rampas'
     }
 }
 
