@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.05.05.02
+// @version      2021.05.11.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -21,9 +21,9 @@ const debugLvl = 1;
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Added translations for LATAM Spanish<br><br>
+- Moved "Include Ramps" to top section as it applies to all features<br><br>
 <b>FIXES:</b><br>
-- Updated Regex checks for United States<br><br>`;
+- <br><br>`;
 
 const RoadAbbr = {
     // Canada
@@ -585,15 +585,15 @@ function initRSA() {
                 <input type=checkbox class='rsa-checkbox' id='rsa-enableScript' />
                 <label class='rsa-label' for='rsa-enableScript'><span id='rsa-text-enableScript' /></label>
             </div>
+            <div class='rsa-option-container'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowRamps' />
+                    <label class='rsa-label' for='rsa-ShowRamps'><span id='rsa-text-ShowRamps' /></label>
+                </div>
             <div id='rsa-text-IconHead' class='rsa-header' />
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowSegShields' />
                     <label class='rsa-label' for='rsa-ShowSegShields'><span id='rsa-text-ShowSegShields' /></label>
-                </div>
-                <div class='rsa-option-container' style='padding:0 3px 3px 15px;'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowRamps' />
-                    <label class='rsa-label' for='rsa-ShowRamps'><span id='rsa-text-ShowRamps' /></label>
                 </div>
             </div>
             <div id='rsa-text-HighlightHead' class='rsa-header' />
