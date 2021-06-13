@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.06.13.01
+// @version      2021.06.13.02
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -22,9 +22,11 @@ const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
 - Enabled country specific features for Germany, Ukraine, and Uruguay<br>
 - Added node highlights when they are configured with exit signs, TIOs, Towards, and visual instructions<br>
+- Added option to only show shields on mH and above<br>
 - Added translations for Ukraine<br><br>
 <b>FIXES:</b><br>
-- Long shield names will now be sized better so you can read them!<br><br>`;
+- Long shield names will now be sized better so you can read them!<br>
+- Fixed bug where mH+ display didn't actaully display mH+<br><br>`;
 
 const RoadAbbr = {
     // Canada
@@ -487,15 +489,15 @@ const Strings = {
         'HighNodeShields': 'Nodes with Shields (TG)',
         'HighNodeShieldsClr': 'Nodes with Shields (TG)',
         'ShowNodeShields': 'Show Node Shield Info',
-        'ShowExitShields': 'Include Exit Signs',
-        'ShowTurnTTS': 'Include TIO',
+        'ShowExitShields': 'Has Exit Signs',
+        'ShowTurnTTS': 'Has TIO',
         'AlertTurnTTS': 'Alert if TTS is different from default',
         'NodeShieldMissing': 'Nodes that might be missing shields',
         'NodeShieldMissingClr': 'Nodes that might be missing shields',
         'resetSettings': 'Reset Settings',
         'disabledFeat': '(Feature not configured for this country)',
-        'ShowTowards': 'Include Towards',
-        'ShowVisualInst': 'Include Visual Instruction',
+        'ShowTowards': 'Has Towards',
+        'ShowVisualInst': 'Has Visual Instruction',
         'SegHasDir': 'Shields with direction',
         'SegHasDirClr': 'Shields with direction',
         'SegInvDir': 'Shields without direction',
@@ -518,15 +520,15 @@ const Strings = {
         'HighNodeShields': 'Nodes with Shields (TG)',
         'HighNodeShieldsClr': 'Nodes with Shields (TG)',
         'ShowNodeShields': 'Show Node Shield Info',
-        'ShowExitShields': 'Include Exit Signs',
-        'ShowTurnTTS': 'Include TIO',
+        'ShowExitShields': 'Has Exit Signs',
+        'ShowTurnTTS': 'Has TIO',
         'AlertTurnTTS': 'Alert if TTS is different from default',
         'NodeShieldMissing': 'Nodes that might be missing shields',
         'NodeShieldMissingClr': 'Nodes that might be missing shields',
         'resetSettings': 'Reset Settings',
         'disabledFeat': '(Feature not configured for this country)',
-        'ShowTowards': 'Include Towards',
-        'ShowVisualInst': 'Include Visual Instruction',
+        'ShowTowards': 'Has Towards',
+        'ShowVisualInst': 'Has Visual Instruction',
         'SegHasDir': 'Shields with direction',
         'SegHasDirClr': 'Shields with direction',
         'SegInvDir': 'Shields without direction',
@@ -1155,7 +1157,7 @@ function processSeg(seg, showNode = false) {
     let hasShield = street.signType !== null;
 
     if (!rsaSettings.ShowRamps && segAtt.roadType === 4) return;
-    if (rsaSettings.mHPlus && segAtt.roadType !== (3 || 4 || 6 || 7)) return;
+    if (rsaSettings.mHPlus && segAtt.roadType != 3 && segAtt.roadType != 4 && segAtt.roadType != 6 && segAtt.roadType != 7) return;
 
     // Display shield on map
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
@@ -1270,7 +1272,7 @@ function displayNodeIcons(node, turnDat) {
             sign: '6',
             txt: 'TG'
         },
-        exitsigns: {
+        exitsign: {
             exists: false,
             color: '',
             width: 30,
@@ -1305,11 +1307,12 @@ function displayNodeIcons(node, turnDat) {
     };
     let count = 0;
 
+    console.log(trnGuid.getExitSigns());
     GUIDANCE.shields.exists = trnGuid.getRoadShields() !== null;
-    if (rsaSettings.ShowExitShields) { GUIDANCE.exitsigns.exists = trnGuid.getExitSigns() !== null; }
-    if (rsaSettings.ShowTurnTTS) { GUIDANCE.tts.exists = trnGuid.getTTS() !== null; }
-    if (rsaSettings.ShowTowards) { GUIDANCE.towards.exists = trnGuid.getTowards() !== null; }
-    if (rsaSettings.ShowVisualInst) { GUIDANCE.visualIn.exists = trnGuid.getVisualInstruction() !== null; }
+    if (rsaSettings.ShowExitShields) { GUIDANCE.exitsign.exists = (trnGuid.getExitSigns() !== null && trnGuid.getExitSigns().length > 0); }
+    if (rsaSettings.ShowTurnTTS) { GUIDANCE.tts.exists = (trnGuid.getTTS() !== null && trnGuid.getTTS().length > 0); }
+    if (rsaSettings.ShowTowards) { GUIDANCE.towards.exists = (trnGuid.getTowards() !== null && trnGuid.getTowards().length > 0); }
+    if (rsaSettings.ShowVisualInst) { GUIDANCE.visualIn.exists = (trnGuid.getVisualInstruction() !== null && trnGuid.getVisualInstruction().length > 0); }
 
     const styleNode = {
         strokeColor: rsaSettings.HighNodeClr,
@@ -1350,7 +1353,7 @@ function displayNodeIcons(node, turnDat) {
 
     _.each(GUIDANCE, (q) => {
         if (q.exists) {
-
+            console.log(q);
             const styleLabel = {
                 externalGraphic: `https://renderer-am.waze.com/renderer/v1/signs/${q.sign}?text=${q.txt}`,
                 graphicHeight: q.height,
