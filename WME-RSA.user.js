@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.05.11.01
+// @version      2021.06.13.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -17,23 +17,47 @@
 /* global _ */
 /* global require */
 
-const debugLvl = 1;
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Moved "Include Ramps" to top section as it applies to all features<br><br>
+- Enabled country specific features for Germany, Ukraine, and Uruguay<br>
+- Added node highlights when they are configured with exit signs, TIOs, Towards, and visual instructions<br>
+- Added translations for Ukraine<br><br>
 <b>FIXES:</b><br>
-- <br><br>`;
+- Long shield names will now be sized better so you can read them!<br><br>`;
 
 const RoadAbbr = {
     // Canada
-    // 5000: Trans-Canada Hwy
-    // 5063: Ontario - Regional Hwy - Generic
     40: {
         'Ontario': {
-            'Hwy': 5063,
-            'Trans-Canada Hwy': 5000
+            'Hwy': 5063, // 5000: Trans-Canada Hwy
+            'Trans-Canada Hwy': 5000 // 5063: Ontario - Regional Hwy - Generic
         }
+    },
+
+    // Germany
+    81: {
+        '': {
+            '(A[0-9]{1,3})': 1012,
+            '(B[0-9]{1,3})': 1094
+        }
+    },
+    // Mexico
+    // 145: {
+
+    // },
+
+    // Ukraine
+    232: {
+        '': {
+           '(E[0-9]{2,3})': 1048,
+           '(М-[0-9]{2})': 1071,
+           '(Н-[0-9]{2})': 1071,
+           '(Р-[0-9]{2})': 1008,
+           '(Т-[0-9]{2}-[0-9]{2,3})': 1008,
+           '(О[0-9]{6,7})': 1085,
+           '(С[0-9]{6,7})': 1085
+       } 
     },
 
     // US
@@ -441,6 +465,13 @@ const RoadAbbr = {
             "SR-": 2143,
             "WY-": 2143,
         }
+    },
+
+    // Uruguay
+    236: {
+       '': {
+           'Ruta': 1111
+       } 
     }
 }
 const Strings = {
@@ -456,14 +487,14 @@ const Strings = {
         'HighNodeShields': 'Nodes with Shields (TG)',
         'HighNodeShieldsClr': 'Nodes with Shields (TG)',
         'ShowNodeShields': 'Show Node Shield Info',
-        'ShowExitShields': 'Include turn icons (if exists)',
-        'ShowTurnTTS': 'Include TTS',
+        'ShowExitShields': 'Include Exit Signs',
+        'ShowTurnTTS': 'Include TIO',
         'AlertTurnTTS': 'Alert if TTS is different from default',
         'NodeShieldMissing': 'Nodes that might be missing shields',
         'NodeShieldMissingClr': 'Nodes that might be missing shields',
         'resetSettings': 'Reset Settings',
         'disabledFeat': '(Feature not configured for this country)',
-        'ShowTowards': 'Include Towards (if exists)',
+        'ShowTowards': 'Include Towards',
         'ShowVisualInst': 'Include Visual Instruction',
         'SegHasDir': 'Shields with direction',
         'SegHasDirClr': 'Shields with direction',
@@ -472,7 +503,8 @@ const Strings = {
         'IconHead': 'Map Icons',
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
-        'ShowRamps': 'Include Ramps'
+        'ShowRamps': 'Include Ramps',
+        'mHPlus': 'Only show on minor highways or greater'
     },
     'en-us': {
         'enableScript': 'Script enabled',
@@ -486,14 +518,14 @@ const Strings = {
         'HighNodeShields': 'Nodes with Shields (TG)',
         'HighNodeShieldsClr': 'Nodes with Shields (TG)',
         'ShowNodeShields': 'Show Node Shield Info',
-        'ShowExitShields': 'Include turn icons (if exists)',
-        'ShowTurnTTS': 'Include TTS',
+        'ShowExitShields': 'Include Exit Signs',
+        'ShowTurnTTS': 'Include TIO',
         'AlertTurnTTS': 'Alert if TTS is different from default',
         'NodeShieldMissing': 'Nodes that might be missing shields',
         'NodeShieldMissingClr': 'Nodes that might be missing shields',
         'resetSettings': 'Reset Settings',
         'disabledFeat': '(Feature not configured for this country)',
-        'ShowTowards': 'Include Towards (if exists)',
+        'ShowTowards': 'Include Towards',
         'ShowVisualInst': 'Include Visual Instruction',
         'SegHasDir': 'Shields with direction',
         'SegHasDirClr': 'Shields with direction',
@@ -502,7 +534,8 @@ const Strings = {
         'IconHead': 'Map Icons',
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
-        'ShowRamps': 'Include Ramps'
+        'ShowRamps': 'Include Ramps',
+        'mHPlus': 'Only show on minor highways or greater'
     },
     'es-419' : {
         'enableScript': 'Script habilitado',
@@ -532,7 +565,39 @@ const Strings = {
         'IconHead': 'Iconos en mapa',
         'HighlightHead': 'Destacar',
         'HighlightColors': 'Reseña de Colores',
-        'ShowRamps': 'Incluir Rampas'
+        'ShowRamps': 'Incluir Rampas',
+        'mHPlus': 'Only show on minor highways or greater'
+    },
+    'uk': {
+        "enableScript":"Скріпт ввімкнено",
+        "HighSegShields":"Сегменти з шильдами",
+        "HighSegShieldsClr":"Сегменти з шильдами",
+        "ShowSegShields":"Показувати шильди на мапі",
+        "SegShieldMissing":"Сегменти, яким можливо потрібні шильди",
+        "SegShieldMissingClr":"Сегменти, яким можливо потрібні шильди",
+        "SegShieldError":"Сегменти, які мають шильди, але можливо вони непотрібні",
+        "SegShieldErrorClr":"Сегменти, які мають шильди, але можливо вони непотрібні",
+        "HighNodeShields":"Вузли з шильдами (TG)",
+        "HighNodeShieldsClr":"Вузли з шильдами (TG)",
+        "ShowNodeShields":"Показувати деталі шильда на вузлі ",
+        "ShowExitShields":"Включити іконку повороту (якщо вони є)",
+        "ShowTurnTTS":"Ввімкнути TTS",
+        "AlertTurnTTS":"Сповіщати, якщо TTS відрізняється від типового",
+        "NodeShieldMissing":"Вузли, на яких можуть бути відсутні щити",
+        "NodeShieldMissingClr":"Вузли, на яких можуть бути відсутні щити",
+        "resetSettings":"Скинути налаштування",
+        "disabledFeat":"Відсутні налаштування для цієї страни",
+        "ShowTowards":"Включаючи Towards (якщо існує)",
+        "ShowVisualInst":"Включаючи візуальні інструкції",
+        "SegHasDir":"Шильди з напрямками",
+        "SegHasDirClr":"Шильди з напрямками",
+        "SegInvDir":"Шильди без напрямків",
+        "SegInvDirClr":"Шильди без напрямків",
+        "IconHead":"Іконки на мапі",
+        "HighlightHead":"Підсвічувати",
+        "HighlightColors":"Кольори підсвічування",
+        "ShowRamps":"Включаючи рампи",
+        'mHPlus': 'Only show on minor highways or greater'
     }
 }
 
@@ -566,7 +631,7 @@ function initRSA() {
         '.rsa-header {font-weight:bold;}',
         '.rsa-option-container {padding:3px;}',
         '.rsa-option-container.no-display {display:none;}',
-        '.rsa-option-container.sub {display:none;margin-left:10px;}',
+        '.rsa-option-container.sub {margin-left:10px;}',
         'input[type="checkbox"].rsa-checkbox {display:inline-block;position:relative;top:3px;vertical-align:top;margin:0;}',
         'input[type="color"].rsa-color-input {display:inline-block;position:relative;width:20px;padding:0px 1px;border:0px;vertical-align:top;cursor:pointer;}',
         'input[type="color"].rsa-color-input:focus {outline-width:0;}',
@@ -586,19 +651,53 @@ function initRSA() {
                 <label class='rsa-label' for='rsa-enableScript'><span id='rsa-text-enableScript' /></label>
             </div>
             <div class='rsa-option-container'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowRamps' />
-                    <label class='rsa-label' for='rsa-ShowRamps'><span id='rsa-text-ShowRamps' /></label>
-                </div>
+                <input type=checkbox class='rsa-checkbox' id='rsa-ShowRamps' />
+                <label class='rsa-label' for='rsa-ShowRamps'><span id='rsa-text-ShowRamps' /></label>
+            </div>
+            <div class='rsa-option-container'>
+                <input type=checkbox class='rsa-checkbox' id='rsa-mHPlus' />
+                <label class='rsa-label' for='rsa-mHPlus'><span id='rsa-text-mHPlus' /></label>
+            </div>
+
             <div id='rsa-text-IconHead' class='rsa-header' />
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowSegShields' />
                     <label class='rsa-label' for='rsa-ShowSegShields'><span id='rsa-text-ShowSegShields' /></label>
                 </div>
+                <div class='rsa-option-container no-display'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
+                    <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing' /></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowNodeShields' />
+                    <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields' /></label>
+                </div>
+                <div class='rsa-option-container sub'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowExitShields' />
+                    <label class='rsa-label' for='rsa-ShowExitShields'><span id='rsa-text-ShowExitShields' /></label>
+                </div>
+                <div class='rsa-option-container sub'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowTurnTTS' />
+                    <label class='rsa-label' for='rsa-ShowTurnTTS'><span id='rsa-text-ShowTurnTTS' /></label>
+                </div>
+                <div class='rsa-option-container sub'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowTowards' />
+                    <label class='rsa-label' for='rsa-ShowTowards'><span id='rsa-text-ShowTowards' /></label>
+                </div>
+                <div class='rsa-option-container sub'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowVisualInst' />
+                    <label class='rsa-label' for='rsa-ShowVisualInst'><span id='rsa-text-ShowVisualInst' /></label>
+                </div>
+                <div class='rsa-option-container sub' style='display:none;'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-AlertTurnTTS' />
+                    <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
+                </div>
             </div>
+
             <div id='rsa-text-HighlightHead' class='rsa-header' />
             <div style='border-top:2px solid black;'>
-                <div class='rsa-option-container'>
+                <div class='rsa-option-container' style='display:none;'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-HighNodeShields' />
                     <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields' /></label>
                 </div>
@@ -622,36 +721,8 @@ function initRSA() {
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldError' />
                     <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError' /></label>
                 </div>
-
-                <div class='rsa-option-container no-display'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
-                    <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing' /></label>
-                </div>
-                <div class='rsa-option-container no-display'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowNodeShields' />
-                    <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields' /></label>
-                </div>
-                <div class='rsa-option-container sub'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowExitShields' />
-                    <label class='rsa-label' for='rsa-ShowExitShields'><span id='rsa-text-ShowExitShields' /></label>
-                </div>
-                <div class='rsa-option-container sub'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowTurnTTS' />
-                    <label class='rsa-label' for='rsa-ShowTurnTTS'><span id='rsa-text-ShowTurnTTS' /></label>
-                </div>
-                <div class='rsa-option-container sub'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowTowards' />
-                    <label class='rsa-label' for='rsa-ShowTowards'><span id='rsa-text-ShowTowards' /></label>
-                </div>
-                <div class='rsa-option-container sub'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-ShowVisualInst' />
-                    <label class='rsa-label' for='rsa-ShowVisualInst'><span id='rsa-text-ShowVisualInst' /></label>
-                </div>
-                <div class='rsa-option-container sub'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-AlertTurnTTS' />
-                    <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
-                </div>
             </div>
+
             <div id='rsa-text-HighlightColors' class='rsa-header' />
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
@@ -727,6 +798,7 @@ async function setupOptions() {
         setChecked('rsa-SegHasDir', rsaSettings.SegHasDir);
         setChecked('rsa-SegInvDir', rsaSettings.SegInvDir);
         setChecked('rsa-ShowRamps', rsaSettings.ShowRamps);
+        setChecked('rsa-mHPlus', rsaSettings.mHPlus);
         setValue('rsa-HighSegClr', rsaSettings.HighSegClr);
         setValue('rsa-MissSegClr', rsaSettings.MissSegClr);
         setValue('rsa-ErrSegClr', rsaSettings.ErrSegClr);
@@ -862,7 +934,8 @@ async function loadSettings() {
         MissNodeClr: '#ff0000',
         SegHasDirClr: '#ffff00',
         SegInvDirClr: '#66ffff',
-        ShowRamps: true
+        ShowRamps: true,
+        mHPlus: false
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -905,7 +978,8 @@ async function saveSettings() {
         MissNodeClr,
         SegHasDirClr,
         SegInvDirClr,
-        ShowRamps
+        ShowRamps,
+        mHPlus
     } = rsaSettings;
 
     const localSettings = {
@@ -932,7 +1006,8 @@ async function saveSettings() {
         MissNodeClr,
         SegHasDirClr,
         SegInvDirClr,
-        ShowRamps
+        ShowRamps,
+        mHPlus
     };
 
     /* // Grab keyboard shortcuts and store them for saving
@@ -988,7 +1063,7 @@ function checkOptions() {
     const countries = W.model.countries.getObjectArray();
 
     if (countries.length < 1) {
-        setTimeout(checkOptions(), 500);
+        setTimeout(function() { checkOptions(); }, 500);
         return;
     } else {
         let allowFeat = false;
@@ -1079,7 +1154,8 @@ function processSeg(seg, showNode = false) {
     let candidate = isStreetCandidate(street, stateName, countryID);
     let hasShield = street.signType !== null;
 
-    if (segAtt.roadType === 4 && !rsaSettings.ShowRamps) return;
+    if (!rsaSettings.ShowRamps && segAtt.roadType === 4) return;
+    if (rsaSettings.mHPlus && segAtt.roadType !== (3 || 4 || 6 || 7)) return;
 
     // Display shield on map
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
@@ -1097,7 +1173,7 @@ function processSeg(seg, showNode = false) {
     if (hasShield && street.direction && rsaSettings.SegHasDir) createHighlight(seg, rsaSettings.SegHasDirClr);
     if (hasShield && !street.direction && rsaSettings.SegInvDir) createHighlight(seg, rsaSettings.SegInvDirClr);
 
-    if (showNode) {
+    /* if (showNode) {
         let toNode = W.model.nodes.getObjectById(segAtt.toNode);
         let fromNode = W.model.nodes.getObjectById(segAtt.fromNode);
 
@@ -1125,7 +1201,7 @@ function processSeg(seg, showNode = false) {
                 }
             }
         }
-    }
+    } */
 }
 
 function processNode(node, seg1, seg2) {
@@ -1134,22 +1210,15 @@ function processNode(node, seg1, seg2) {
     let hasGuidence = turnData.hasTurnGuidance();
 
     if (hasGuidence) {
-        let hasExitShield = turnData.turnGuidance.exitSigns.length > 0;
-        let hasShields = !$.isEmptyObject(turnData.turnGuidance.roadShields)
+        // if (rsaSettings.HighNodeShields) createHighlight(node, rsaSettings.HighNodeClr);
 
-        if(rsaSettings.HighNodeShields) {
-            createHighlight(node, rsaSettings.HighNodeClr);
-        }
-
-        if(rsaSettings.ShowNodeShields) {
-            displayNodeShields(node, turnData);
-        }
+        if (rsaSettings.ShowNodeShields && W.map.getZoom() > 2) displayNodeIcons(node, turnData);
     }
     
 }
 
-function isStreetCandidate(s, state, country) {
-    let info = {
+function isStreetCandidate(street, state, country) {
+    const info = {
         isCandidate: false,
         iconID: null
     }
@@ -1158,79 +1227,173 @@ function isStreetCandidate(s, state, country) {
         return info;
     }
 
-    let name = s.name;
-    let abbrvs = RoadAbbr[country][state];
+    //Check to see if the country has states configured in RSA by looking for a key with nothing in it
+    const noStates = '' in RoadAbbr[country];
+    const name = street.name;
+    const abbrvs = noStates ? RoadAbbr[country][''] : RoadAbbr[country][state];
 
     for (let i=0; i < Object.keys(abbrvs).length; i++) {
-        let abbr = Object.keys(abbrvs)[i];
-        // console.log('name: ' + name + ' abbr: ' + abbr);
-        if (name && name.includes(abbr)) {
-            info.isCandidate = true;
-            info.iconID = abbrvs[i];
+        if (name) {
+            if (noStates) {
+                const abrKey = Object.keys(abbrvs)[i];
+                const abbr = new RegExp(abrKey, 'g');
+                const isMatch = name.match(abbr);
+
+                if (isMatch && name === isMatch[0]) {
+                    info.isCandidate = true;
+                    info.iconID = abbrvs[abrKey];
+                }
+            } else {
+                const abbr = Object.keys(abbrvs)[i];
+                const isMatch = name.includes(abbr);
+
+                if (isMatch) {
+                    // console.log(abbrvs[abbr]);
+                    info.isCandidate = true;
+                    info.iconID = abbrvs[abbr];
+                }
+            } 
         }
     }
-    // console.log(info);
     return info;
 }
 
-function displayNodeShields(node, turnDat) {
-    if(debugLvl === 1) return;
+function displayNodeIcons(node, turnDat) {
     const geo = node.geometry.clone();
     const trnGuid = turnDat.getTurnGuidance();
-    const GUIDANCE = {};
+    const GUIDANCE = {
+        shields: {
+            exists: false,
+            color: '',
+            width: 30,
+            height: 30,
+            sign: '6',
+            txt: 'TG'
+        },
+        exitsigns: {
+            exists: false,
+            color: '',
+            width: 30,
+            height: 20,
+            sign: '2159',
+            txt: 'EX'
+        },
+        tts: {
+            exists: false,
+            color: '',
+            width: 30,
+            height: 30,
+            sign: '7',
+            txt: 'TIO'
+        },
+        towards: {
+            exists: false,
+            color: '',
+            width: 30,
+            height: 30,
+            sign: '7',
+            txt: 'TW'
+        },
+        visualIn: {
+            exists: false,
+            color: '',
+            width: 30,
+            height: 30,
+            sign: '7',
+            txt: 'VI'
+        }
+    };
+    let count = 0;
 
-    // Obj of objs - RS-0: direction: string, text: string, type: shield number
-    GUIDANCE.shields = trnGuid.getRoadShields();
-    // Array of objects - 'text': string, 'type': shield number
-    if (rsaSettings.ShowExitShields) { GUIDANCE.exitsigns = trnGuid.getExitSigns(); }
-    // String
-    if (rsaSettings.ShowTurnTTS) { GUIDANCE.tts = trnGuid.getTTS(); }
-    // String
-    if (rsaSettings.ShowTowards) { GUIDANCE.towards = trnGuid.getTowards(); }
-    // String
-    if (rsaSettings.ShowVisualInst) { GUIDANCE.visualIn = trnGuid.getVisualInstruction(); }
-    if (rsaSettings.AlertTurnTTS) {}
-
+    GUIDANCE.shields.exists = trnGuid.getRoadShields() !== null;
+    if (rsaSettings.ShowExitShields) { GUIDANCE.exitsigns.exists = trnGuid.getExitSigns() !== null; }
+    if (rsaSettings.ShowTurnTTS) { GUIDANCE.tts.exists = trnGuid.getTTS() !== null; }
+    if (rsaSettings.ShowTowards) { GUIDANCE.towards.exists = trnGuid.getTowards() !== null; }
+    if (rsaSettings.ShowVisualInst) { GUIDANCE.visualIn.exists = trnGuid.getVisualInstruction() !== null; }
 
     const styleNode = {
-        //strokeColor: color,
+        strokeColor: rsaSettings.HighNodeClr,
         strokeOpacity: 0.75,
         strokeWidth: 4,
-        //fillColor: color,
+        fillColor: rsaSettings.HighNodeClr,
         fillOpacity: 0.75,
         pointRadius: 3
-    }
-    const styleLabel = {
-        externalGraphic: 'https://renderer.gcp.wazestg.com/renderer/v1/signs/6',
-        graphicHeight: 30,
-        graphicWidth: 30,
-        label: 'TG',
-        fontSize: 12,
-        graphicZIndex: 700
     };
 
-    // Array of points for line connecting node to display box
-    let points = [];
+    let startPoint = {
+        x: geo.getVertices()[0].x,
+        y: geo.getVertices()[0].y
+    }
+    let lblStart = {
+        x: startPoint.x + LabelDistance().label,
+        y: startPoint.y + LabelDistance().label
+    }
 
+    // Array of points for line connecting node to icons
+    let points = [];
     // Point coords
-    let pointNode = new OpenLayers.Geometry.Point(geo.x, geo.y);
+    let pointNode = new OpenLayers.Geometry.Point(startPoint.x, startPoint.y);
     points.push(pointNode);
     // Label coords
-    let pointLabel = new OpenLayers.Geometry.Point(geo.x + LabelDistance(), geo.y + LabelDistance());
+    var pointLabel = new OpenLayers.Geometry.Point(lblStart.x, lblStart.y);
     points.push(pointLabel);
 
-    // Point on node
-    var pointFeature = new OpenLayers.Feature.Vector(pointNode, null, styleNode);
-    rsaIconLayer.addFeatures([pointFeature]);
 
+    // Point on node
+    let pointFeature = new OpenLayers.Feature.Vector(pointNode, null, styleNode);
+    rsaIconLayer.addFeatures([pointFeature]);
     // Line between node and label
     var newline = new OpenLayers.Geometry.LineString(points);
     var lineFeature = new OpenLayers.Feature.Vector(newline, null, styleNode);
     rsaIconLayer.addFeatures([lineFeature]);
 
-    // Label
-    var pointFeature = new OpenLayers.Feature.Vector(pointLabel, null, styleLabel);
-    rsaIconLayer.addFeatures([pointFeature]);
+
+    _.each(GUIDANCE, (q) => {
+        if (q.exists) {
+
+            const styleLabel = {
+                externalGraphic: `https://renderer-am.waze.com/renderer/v1/signs/${q.sign}?text=${q.txt}`,
+                graphicHeight: q.height,
+                graphicWidth: q.width,
+                fontSize: 12,
+                graphicZIndex: 700
+            };
+            let xpoint;
+            let ypoint;
+
+            switch(count) {
+                case 0:
+                    xpoint = lblStart.x;
+                    ypoint = lblStart.y;
+                    break;
+                case 1:
+                    xpoint = lblStart.x + LabelDistance().icon;
+                    ypoint = lblStart.y;
+                    break;
+                case 2:
+                    xpoint = lblStart.x;
+                    ypoint = lblStart.y - LabelDistance().icon;
+                    break;
+                case 3: 
+                    xpoint = lblStart.x + LabelDistance().icon;
+                    ypoint = lblStart.y - LabelDistance().icon;
+                    break;
+                case 4:
+                    xpoint = lblStart.x + (LabelDistance().icon * 2);
+                    ypoint = lblStart.y;
+                default:
+                    break;
+            }
+
+            // Label coords
+            let pointLabel = new OpenLayers.Geometry.Point(xpoint, ypoint);
+            // Label
+            let labelFeat = new OpenLayers.Feature.Vector(pointLabel, null, styleLabel);
+            rsaIconLayer.addFeatures([labelFeat]);
+
+            count++;
+        }
+    });
 }
 
 function displaySegShields(segment, shieldID, shieldText, shieldDir) {
@@ -1240,7 +1403,20 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
     let SegmentPoints = [];
     let oldparam = {};
     let labelDis = LabelDistance();
+    let width = 37;
+    let height = 37;
 
+    if (shieldText.length > 4 && shieldText.length < 7) {
+        width = 50;
+        height = 40;
+    } else if (shieldText.length > 6 && shieldText.length < 9) {
+        width = 80;
+        height = 45;
+    }
+    else if (shieldText.length > 8 && shieldText.length < 13) {
+        width = 100;
+        height = 50;
+    }
     oldparam.x = null;
     oldparam.y = null;
     let AtLeastOne = false;
@@ -1251,8 +1427,8 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
         // Shield icon style
         const style = {
             externalGraphic: iconURL,
-            graphicWidth: 37,
-            graphicHeight: 37,
+            graphicWidth: width,
+            graphicHeight: height,
             graphicYOffset: -20,
             graphicZIndex: 650
         };
@@ -1352,41 +1528,55 @@ function LabelDistance() {
     // space is the space between geo points needed to render another icon
     let label_distance = {};
     switch (W.map.getOLMap().getZoom()) {
+        case 10:
+            label_distance.label = 2;
+            label_distance.space = 20;
+            label_distance.icon = 1.1;
+            break;
         case 9:
             label_distance.label = 2;
             label_distance.space = 20;
+            label_distance.icon = 2.2;
             break;
         case 8:
             label_distance.label = 4;
             label_distance.space = 20;
+            label_distance.icon = 4.5;
             break;
         case 7:
             label_distance.label = 7;
             label_distance.space = 20;
+            label_distance.icon = 8.3;
             break;
         case 6:
             label_distance.label = 12;
             label_distance.space = 30;
+            label_distance.icon = 17;
             break;
         case 5:
             label_distance.label = 30;
             label_distance.space = 30;
+            label_distance.icon = 34;
             break;
         case 4:
             label_distance.label = 40;
             label_distance.space = 40;
+            label_distance.icon = 68;
             break;
         case 3:
             label_distance.label = 70;
             label_distance.space = 70;
+            label_distance.icon = 140;
             break;
         case 2:
             label_distance.label = 150;
             label_distance.space = 200;
+            label_distance.icon = null;
             break;
         case 1:
             label_distance.label = 200;
             label_distance.space = 250;
+            label_distance.icon = null;
             break;
     }
     return label_distance;
