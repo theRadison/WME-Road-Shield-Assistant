@@ -1307,7 +1307,6 @@ function displayNodeIcons(node, turnDat) {
     };
     let count = 0;
 
-    console.log(trnGuid.getExitSigns());
     GUIDANCE.shields.exists = trnGuid.getRoadShields() !== null;
     if (rsaSettings.ShowExitShields) { GUIDANCE.exitsign.exists = (trnGuid.getExitSigns() !== null && trnGuid.getExitSigns().length > 0); }
     if (rsaSettings.ShowTurnTTS) { GUIDANCE.tts.exists = (trnGuid.getTTS() !== null && trnGuid.getTTS().length > 0); }
