@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.06.13.03
+// @version      2021.07.07.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -20,13 +20,9 @@
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Enabled country specific features for Germany, Ukraine, and Uruguay<br>
-- Added node highlights when they are configured with exit signs, TIOs, Towards, and visual instructions<br>
-- Added option to only show shields on mH and above<br>
-- Added translations for Ukraine<br><br>
+- Highlight for segments/nodes the small caps format is not followed<br><br>
 <b>FIXES:</b><br>
-- Long shield names will now be sized better so you can read them!<br>
-- Fixed bug where mH+ display didn't actaully display mH+<br><br>`;
+<br><br>`;
 
 const RoadAbbr = {
     // Canada
@@ -506,7 +502,9 @@ const Strings = {
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps',
-        'mHPlus': 'Only show on minor highways or greater'
+        'mHPlus': 'Only show on minor highways or greater',
+        'titleCase': 'Segments/nodes with direction not in caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
     },
     'en-us': {
         'enableScript': 'Script enabled',
@@ -537,7 +535,9 @@ const Strings = {
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps',
-        'mHPlus': 'Only show on minor highways or greater'
+        'mHPlus': 'Only show on minor highways or greater',
+        'titleCase': 'Segments/nodes with direction not in caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
     },
     'es-419' : {
         'enableScript': 'Script habilitado',
@@ -568,7 +568,9 @@ const Strings = {
         'HighlightHead': 'Destacar',
         'HighlightColors': 'Reseña de Colores',
         'ShowRamps': 'Incluir Rampas',
-        'mHPlus': 'Only show on minor highways or greater'
+        'mHPlus': 'Only show on minor highways or greater',
+        'titleCase': 'Segments/nodes with direction not in caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
     },
     'uk': {
         "enableScript":"Скріпт ввімкнено",
@@ -599,7 +601,9 @@ const Strings = {
         "HighlightHead":"Підсвічувати",
         "HighlightColors":"Кольори підсвічування",
         "ShowRamps":"Включаючи рампи",
-        'mHPlus': 'Only show on minor highways or greater'
+        'mHPlus': 'Only show on minor highways or greater',
+        'titleCase': 'Segments/nodes with direction not in caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
     }
 }
 
@@ -661,6 +665,7 @@ function initRSA() {
                 <label class='rsa-label' for='rsa-mHPlus'><span id='rsa-text-mHPlus' /></label>
             </div>
 
+            <!-- Icons Section -->
             <div id='rsa-text-IconHead' class='rsa-header' />
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
@@ -696,7 +701,9 @@ function initRSA() {
                     <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
                 </div>
             </div>
+            <!-- End Icons Section -->
 
+            <!-- Highlights Section -->
             <div id='rsa-text-HighlightHead' class='rsa-header' />
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container' style='display:none;'>
@@ -712,6 +719,10 @@ function initRSA() {
                     <label class='rsa-label' for='rsa-SegHasDir'><span id='rsa-text-SegHasDir' /></label>
                 </div>
                 <div class='rsa-option-container'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-titleCase' />
+                    <label class='rsa-label' for='rsa-titleCase'><span id='rsa-text-titleCase' /></label>
+                </div>
+                <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegInvDir' />
                     <label class='rsa-label' for='rsa-SegInvDir'><span id='rsa-text-SegInvDir' /></label>
                 </div>
@@ -724,7 +735,9 @@ function initRSA() {
                     <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError' /></label>
                 </div>
             </div>
+            <!-- End Highlights Section -->
 
+            <!-- Color Picker Section -->
             <div id='rsa-text-HighlightColors' class='rsa-header' />
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
@@ -755,7 +768,13 @@ function initRSA() {
                     <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
                     <label class='rsa-label' for='rsa-MissNodeClr'><span id='rsa-text-NodeShieldMissingClr' /></label>
                 </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-TitleCaseClr' />
+                    <label class='rsa-label' for='rsa-TitleCaseClr'><span id='rsa-text-TitleCaseClr' /></label>
+                </div>
             </div>
+            <!-- End Color Picker Section -->
+
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=button id='rsa-resetSettings' />
@@ -801,6 +820,7 @@ async function setupOptions() {
         setChecked('rsa-SegInvDir', rsaSettings.SegInvDir);
         setChecked('rsa-ShowRamps', rsaSettings.ShowRamps);
         setChecked('rsa-mHPlus', rsaSettings.mHPlus);
+        setChecked('rsa-titleCase', rsaSettings.titleCase);
         setValue('rsa-HighSegClr', rsaSettings.HighSegClr);
         setValue('rsa-MissSegClr', rsaSettings.MissSegClr);
         setValue('rsa-ErrSegClr', rsaSettings.ErrSegClr);
@@ -808,6 +828,7 @@ async function setupOptions() {
         setValue('rsa-MissNodeClr', rsaSettings.MissNodeClr);
         setValue('rsa-SegHasDirClr', rsaSettings.SegHasDirClr);
         setValue('rsa-SegInvDirClr', rsaSettings.SegInvDirClr);
+        setValue('rsa-TitleCaseClr', rsaSettings.TitleCaseClr);
 
         function setChecked(ele, status) {
             $(`#${ele}`).prop('checked', status);
@@ -936,8 +957,10 @@ async function loadSettings() {
         MissNodeClr: '#ff0000',
         SegHasDirClr: '#ffff00',
         SegInvDirClr: '#66ffff',
+        TitleCaseClr: '#ff9933',
         ShowRamps: true,
-        mHPlus: false
+        mHPlus: false,
+        titleCase: false
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -980,8 +1003,10 @@ async function saveSettings() {
         MissNodeClr,
         SegHasDirClr,
         SegInvDirClr,
+        TitleCaseClr,
         ShowRamps,
-        mHPlus
+        mHPlus,
+        titleCase
     } = rsaSettings;
 
     const localSettings = {
@@ -1008,8 +1033,10 @@ async function saveSettings() {
         MissNodeClr,
         SegHasDirClr,
         SegInvDirClr,
+        TitleCaseClr,
         ShowRamps,
-        mHPlus
+        mHPlus,
+        titleCase
     };
 
     /* // Grab keyboard shortcuts and store them for saving
@@ -1132,13 +1159,13 @@ function tryScan() {
         // if (selFea.model.type === 'segment') scanSeg(selFea.model, true);
     } else {
         // Scan all segments on screen
-        if(rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields) {
+        if (rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields || rsaSettings.titleCase) {
             _.each(W.model.segments.getObjectArray(), s => {
                 scanSeg(s);
             });
         }
         // Scan all nodes on screen
-        if(rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields) {
+        if (rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields || rsaSettings.titleCase) {
             _.each(W.model.nodes.getObjectArray(), n => {
                 scanNode(n);
             });
@@ -1156,7 +1183,10 @@ function processSeg(seg, showNode = false) {
     let candidate = isStreetCandidate(street, stateName, countryID);
     let hasShield = street.signType !== null;
 
+    // Exlude ramps
     if (!rsaSettings.ShowRamps && segAtt.roadType === 4) return;
+
+    // Only show mH and above
     if (rsaSettings.mHPlus && segAtt.roadType != 3 && segAtt.roadType != 4 && segAtt.roadType != 6 && segAtt.roadType != 7) return;
 
     // Display shield on map
@@ -1175,35 +1205,11 @@ function processSeg(seg, showNode = false) {
     if (hasShield && street.direction && rsaSettings.SegHasDir) createHighlight(seg, rsaSettings.SegHasDirClr);
     if (hasShield && !street.direction && rsaSettings.SegInvDir) createHighlight(seg, rsaSettings.SegInvDirClr);
 
-    /* if (showNode) {
-        let toNode = W.model.nodes.getObjectById(segAtt.toNode);
-        let fromNode = W.model.nodes.getObjectById(segAtt.fromNode);
-
-
-        function getInfo(node) {
-            let conSegs = node.attributes.segIDs;
-
-            for (let i=0; i < conSegs.length; i++) {
-                let seg1 = W.model.segments.getObjectById(conSegs[i]);
-                for (let j=0; j < conSegs.length; j++) {
-                    let seg2 = W.model.segments.getObjectById(conSegs[j]);
-                    
-                    let turn = W.model.getTurnGraph().getTurnThroughNode(node,seg1,seg2);
-                    let turnData = turn.getTurnData();
-                    let hasGuidance = turnData.hasTurnGuidance();
-
-                    if (hasGuidance) {
-                        let turnGuidance = turnData.getTurnGuidance();
-                        let exitSigns = turnGuidance.getExitSigns(); // Returns array of objects
-                        let roadShields = turnGuidance.getRoadShields(); // Returns object of objects
-                        let TTS = turnGuidance.getTTS(); // Returns string
-                        let towards = turnGuidance.getTowards(); // Returns string
-                        let visualInstruct = turnGuidance.getVisualInstruction(); // Returns string
-                    }
-                }
-            }
-        }
-    } */
+    // Streets without capitalized letters
+    if (rsaSettings.titleCase) {
+        const badName = matchTitleCase(street);
+        if (badName === true) createHighlight(seg, rsaSettings.TitleCaseClr, true);
+    }
 }
 
 function processNode(node, seg1, seg2) {
@@ -1212,9 +1218,13 @@ function processNode(node, seg1, seg2) {
     let hasGuidence = turnData.hasTurnGuidance();
 
     if (hasGuidence) {
-        // if (rsaSettings.HighNodeShields) createHighlight(node, rsaSettings.HighNodeClr);
-
+        const guidance = turnData.getTurnGuidance();
         if (rsaSettings.ShowNodeShields && W.map.getZoom() > 2) displayNodeIcons(node, turnData);
+
+        if (rsaSettings.titleCase) {
+            let badName = matchTitleCaseThroughNode(guidance);
+            if (badName === true) createHighlight(node, rsaSettings.TitleCaseClr, true);
+        }
     }
     
 }
@@ -1258,6 +1268,50 @@ function isStreetCandidate(street, state, country) {
         }
     }
     return info;
+}
+
+function matchTitleCase(street) {
+    const dir = street.direction;
+    let isBad = false;
+    if (dir !== '' && dir !== null) {
+        //console.log(dir);
+        if (dir.match(/(north)/i) != null) isBad = true;
+        if (dir.match(/(south)/i) != null) isBad = true;
+        if (dir.match(/(east)/i) != null) isBad = true;
+        if (dir.match(/(west)/i) != null) isBad = true;
+        if (dir.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) isBad = true;
+
+    }
+    return isBad;
+}
+
+function matchTitleCaseThroughNode(turnGuid) {
+    const shields = turnGuid.getRoadShields();
+    const twd = turnGuid.getTowards();
+    const tts = turnGuid.getTTS();
+    const VI = turnGuid.getVisualInstruction();
+    let isBad = false;
+
+    function checkText(txt) {
+        if (txt !== '' && txt !== null) {
+            if (txt.match(/(north)/i) != null) isBad = true;
+            if (txt.match(/(south)/i) != null) isBad = true;
+            if (txt.match(/(east)/i) != null) isBad = true;
+            if (txt.match(/(west)/i) != null) isBad = true;
+            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) isBad = true;
+        }
+    }
+
+    if (shields) {
+        _.each(shields, (s) => {
+            checkText(s.direction);
+        });
+    }
+    if (twd && twd !== "") checkText(twd);
+    if (tts && tts !== "") checkText(tts);
+    if (VI && VI !== "") checkText(VI);
+
+    return isBad;
 }
 
 function displayNodeIcons(node, turnDat) {
@@ -1352,7 +1406,7 @@ function displayNodeIcons(node, turnDat) {
 
     _.each(GUIDANCE, (q) => {
         if (q.exists) {
-            console.log(q);
+            // console.log(q);
             const styleLabel = {
                 externalGraphic: `https://renderer-am.waze.com/renderer/v1/signs/${q.sign}?text=${q.txt}`,
                 graphicHeight: q.height,
@@ -1467,50 +1521,29 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
 function createHighlight(obj, color, overSized = false) {
     const geo = obj.geometry.clone();
     let isNode = obj.type == 'node';
-    let labelDis = LabelDistance();
 
-    if(isNode) {
+    if (isNode) {
         const styleNode = {
             strokeColor: color,
-            strokeOpacity: 0.75,
+            strokeOpacity: overSized == true ? 1 : 0.75,
             strokeWidth: 4,
             fillColor: color,
             fillOpacity: 0.75,
-            pointRadius: 3
+            pointRadius: overSized == true ? 7 : 3
         }
-        const styleLabel = {
-            externalGraphic: 'https://renderer.gcp.wazestg.com/renderer/v1/signs/6?text=TG',
-            graphicHeight: 30,
-            graphicWidth: 30,
-            graphicZIndex: 700
-        };
 
-        let points = [];
         // Point coords
         let pointNode = new OpenLayers.Geometry.Point(geo.x, geo.y);
-        points.push(pointNode);
-        // Label coords
-        let pointLabel = new OpenLayers.Geometry.Point(geo.x + labelDis.label, geo.y + labelDis.label);
-        points.push(pointLabel);
 
         // Point on node
         var pointFeature = new OpenLayers.Feature.Vector(pointNode, null, styleNode);
-        rsaIconLayer.addFeatures([pointFeature]);
-
-        // Line between node and label
-        var newline = new OpenLayers.Geometry.LineString(points);
-        var lineFeature = new OpenLayers.Feature.Vector(newline, null, styleNode);
-        rsaIconLayer.addFeatures([lineFeature]);
-
-        // Label
-        var pointFeature = new OpenLayers.Feature.Vector(pointLabel, null, styleLabel);
         rsaIconLayer.addFeatures([pointFeature]);
     } else {
         // console.log('seg highlight')
         const style = {
             strokeColor: color,
-            strokeOpacity: 0.75,
-            strokeWidth: 4,
+            strokeOpacity: overSized == true ? 1 : 0.75,
+            strokeWidth: overSized == true ? 7 : 4,
             fillColor: color,
             fillOpacity: 0.75
         }
