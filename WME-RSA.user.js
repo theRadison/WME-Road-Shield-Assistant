@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.07.07.01
+// @version      2021.07.12.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -20,7 +20,7 @@
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Highlight for segments/nodes the small caps format is not followed<br><br>
+- Highlight for segments and nodes when the small caps format is not followed(USA format)<br><br>
 <b>FIXES:</b><br>
 <br><br>`;
 
@@ -471,7 +471,7 @@ const RoadAbbr = {
            'Ruta': 1111
        } 
     }
-}
+};
 const Strings = {
     'en': {
         'enableScript': 'Script enabled',
@@ -494,17 +494,21 @@ const Strings = {
         'disabledFeat': '(Feature not configured for this country)',
         'ShowTowards': 'Has Towards',
         'ShowVisualInst': 'Has Visual Instruction',
-        'SegHasDir': 'Shields with direction',
-        'SegHasDirClr': 'Shields with direction',
-        'SegInvDir': 'Shields without direction',
-        'SegInvDirClr': 'Shields without direction',
+        'SegHasDir': 'Segment Shields with direction',
+        'SegHasDirClr': 'Segment Shields with direction',
+        'SegInvDir': 'Segment Shields without direction',
+        'SegInvDirClr': 'Segment Shields without direction',
         'IconHead': 'Map Icons',
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps',
         'mHPlus': 'Only show on minor highways or greater',
-        'titleCase': 'Segments/nodes with direction not in caps format',
-        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
+        'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseSftClr': 'Direction in free text might not be in large-and-small-caps format',
+        'checkTWD': 'Include Towards field',
+        'checkTTS': 'Include TTS field',
+        'checkVI': 'Include Visual Instruction field'
     },
     'en-us': {
         'enableScript': 'Script enabled',
@@ -527,17 +531,21 @@ const Strings = {
         'disabledFeat': '(Feature not configured for this country)',
         'ShowTowards': 'Has Towards',
         'ShowVisualInst': 'Has Visual Instruction',
-        'SegHasDir': 'Shields with direction',
-        'SegHasDirClr': 'Shields with direction',
-        'SegInvDir': 'Shields without direction',
-        'SegInvDirClr': 'Shields without direction',
+        'SegHasDir': 'Segment Shields with direction',
+        'SegHasDirClr': 'Segment Shields with direction',
+        'SegInvDir': 'Segment Shields without direction',
+        'SegInvDirClr': 'Segment Shields without direction',
         'IconHead': 'Map Icons',
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps',
         'mHPlus': 'Only show on minor highways or greater',
-        'titleCase': 'Segments/nodes with direction not in caps format',
-        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
+        'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseSftClr': 'Direction in free text might not be in large-and-small-caps format',
+        'checkTWD': 'Include Towards field',
+        'checkTTS': 'Include TTS field',
+        'checkVI': 'Include Visual Instruction field'
     },
     'es-419' : {
         'enableScript': 'Script habilitado',
@@ -569,8 +577,12 @@ const Strings = {
         'HighlightColors': 'Reseña de Colores',
         'ShowRamps': 'Incluir Rampas',
         'mHPlus': 'Only show on minor highways or greater',
-        'titleCase': 'Segments/nodes with direction not in caps format',
-        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
+        'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseSftClr': 'Direction in free text might not be in large-and-small-caps format',
+        'checkTWD': 'Include Towards field',
+        'checkTTS': 'Include TTS field',
+        'checkVI': 'Include Visual Instruction field'
     },
     'uk': {
         "enableScript":"Скріпт ввімкнено",
@@ -602,13 +614,15 @@ const Strings = {
         "HighlightColors":"Кольори підсвічування",
         "ShowRamps":"Включаючи рампи",
         'mHPlus': 'Only show on minor highways or greater',
-        'titleCase': 'Segments/nodes with direction not in caps format',
-        'TitleCaseClr': 'Segments/nodes with direction not in caps format'
+        'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
+        'TitleCaseSftClr': 'Direction in free text might not be in large-and-small-caps format'
     }
-}
-
+};
+let BadNames = [];
 let rsaSettings;
 let UpdateObj;
+let SetTurn;
 let rsaMapLayer;
 let rsaIconLayer;
 let LANG;
@@ -629,6 +643,7 @@ function rsaBootstrap(tries = 0) {
 
 function initRSA() {
     UpdateObj = require('Waze/Action/UpdateObject');
+    SetTurn = require('Waze/Model/Graph/Actions/SetTurn');
 
     const rsaCss = [
         '.rsa-wrapper {position:relative;width:100%;font-size:12px;font-family:"Rubik", "Boing-light", sans-serif;user-select:none;}',
@@ -637,11 +652,12 @@ function initRSA() {
         '.rsa-header {font-weight:bold;}',
         '.rsa-option-container {padding:3px;}',
         '.rsa-option-container.no-display {display:none;}',
-        '.rsa-option-container.sub {margin-left:10px;}',
+        '.rsa-option-container.sub {margin-left:20px;}',
         'input[type="checkbox"].rsa-checkbox {display:inline-block;position:relative;top:3px;vertical-align:top;margin:0;}',
         'input[type="color"].rsa-color-input {display:inline-block;position:relative;width:20px;padding:0px 1px;border:0px;vertical-align:top;cursor:pointer;}',
         'input[type="color"].rsa-color-input:focus {outline-width:0;}',
-        'label.rsa-label {display:inline-block;position:relative;max-width:80%;vertical-align:top;font-weight:normal;padding-left:5px;word-wrap:break-word;}'
+        'label.rsa-label {display:inline-block;position:relative;max-width:80%;vertical-align:top;font-weight:normal;padding-left:5px;word-wrap:break-word;}',
+        '.group-title.toolbar-top-level-item-title.rsa:hover {cursor:pointer;}'
     ].join(' ');
 
     const $rsaTab = $('<div>');
@@ -718,9 +734,21 @@ function initRSA() {
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegHasDir' />
                     <label class='rsa-label' for='rsa-SegHasDir'><span id='rsa-text-SegHasDir' /></label>
                 </div>
-                <div class='rsa-option-container'>
+                <div class='rsa-option-container' id='rsa-container-titleCase'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-titleCase' />
                     <label class='rsa-label' for='rsa-titleCase'><span id='rsa-text-titleCase' /></label>
+                </div>
+                <div class='rsa-option-container sub' id='rsa-container-checkTWD'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-checkTWD' />
+                    <label class='rsa-label' for='rsa-checkTWD'><span id='rsa-text-checkTWD' /></label>
+                </div>
+                <div class='rsa-option-container sub' id='rsa-container-checkTTS'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-checkTTS' />
+                    <label class='rsa-label' for='rsa-checkTTS'><span id='rsa-text-checkTTS' /></label>
+                </div>
+                <div class='rsa-option-container sub' id='rsa-container-checkVI'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-checkVI' />
+                    <label class='rsa-label' for='rsa-checkVI'><span id='rsa-text-checkVI' /></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegInvDir' />
@@ -768,9 +796,13 @@ function initRSA() {
                     <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
                     <label class='rsa-label' for='rsa-MissNodeClr'><span id='rsa-text-NodeShieldMissingClr' /></label>
                 </div>
-                <div class='rsa-option-container'>
+                <div class='rsa-option-container' id='rsa-container-TitleCaseClr'>
                     <input type=color class='rsa-color-input' id='rsa-TitleCaseClr' />
                     <label class='rsa-label' for='rsa-TitleCaseClr'><span id='rsa-text-TitleCaseClr' /></label>
+                </div>
+                <div class='rsa-option-container' id='rsa-container-TitleCaseSftClr'>
+                    <input type=color class='rsa-color-input' id='rsa-TitleCaseSftClr' />
+                    <label class='rsa-label' for='rsa-TitleCaseSftClr'><span id='rsa-text-TitleCaseSftClr' /></label>
                 </div>
             </div>
             <!-- End Color Picker Section -->
@@ -783,8 +815,13 @@ function initRSA() {
         </div>`
     ].join(' '));
     
+    const $rsaFixWrapper = $('<div id="rsa-autoWrapper" class="toolbar-button ItemInactive" style="display:none;margin-right:5px;">');
+    const $rsaFixInner = $('<div class="group-title toolbar-top-level-item-title rsa" style="margin:5px 0 0 15px;font-size:12px;">RSA Fix</div>');
+
     new WazeWrap.Interface.Tab('RSA', $rsaTab.html, setupOptions);
     $(`<style type="text/css">${rsaCss}</style>`).appendTo('head');
+    $($rsaFixInner).appendTo($rsaFixWrapper);
+    $($rsaFixWrapper).appendTo($('#primary-toolbar > div'));
     WazeWrap.Interface.ShowScriptUpdate(GM_info.script.name, GM_info.script.version, RSA_UPDATE_NOTES, GF_LINK, FORUM_LINK);
     console.log('RSA: loaded');
 }
@@ -821,6 +858,9 @@ async function setupOptions() {
         setChecked('rsa-ShowRamps', rsaSettings.ShowRamps);
         setChecked('rsa-mHPlus', rsaSettings.mHPlus);
         setChecked('rsa-titleCase', rsaSettings.titleCase);
+        setChecked('rsa-checkTWD', rsaSettings.checkTWD);
+        setChecked('rsa-checkTTS', rsaSettings.checkTTS);
+        setChecked('rsa-checkVI', rsaSettings.checkVI);
         setValue('rsa-HighSegClr', rsaSettings.HighSegClr);
         setValue('rsa-MissSegClr', rsaSettings.MissSegClr);
         setValue('rsa-ErrSegClr', rsaSettings.ErrSegClr);
@@ -829,6 +869,17 @@ async function setupOptions() {
         setValue('rsa-SegHasDirClr', rsaSettings.SegHasDirClr);
         setValue('rsa-SegInvDirClr', rsaSettings.SegInvDirClr);
         setValue('rsa-TitleCaseClr', rsaSettings.TitleCaseClr);
+        setValue('rsa-TitleCaseSftClr', rsaSettings.TitleCaseSftClr);
+
+        if (rsaSettings.titleCase === true && W.model.getTopCountry().id === 235) {
+            $('#rsa-container-checkTWD').css('display', 'block');
+            $('#rsa-container-checkTTS').css('display', 'block');
+            $('#rsa-container-checkVI').css('display', 'block');
+        } else {
+            $('#rsa-container-checkTWD').css('display', 'none');
+            $('#rsa-container-checkTTS').css('display', 'none');
+            $('#rsa-container-checkVI').css('display', 'none');
+        }
 
         function setChecked(ele, status) {
             $(`#${ele}`).prop('checked', status);
@@ -842,10 +893,14 @@ async function setupOptions() {
     }
 
     // Register event listeners
+    WazeWrap.Events.register('selectionchanged', null, removeAutoFixButton);
     WazeWrap.Events.register('selectionchanged', null, tryScan);
+    WazeWrap.Events.register('moveend', null, removeAutoFixButton);
     WazeWrap.Events.register('moveend', null, tryScan);
-    WazeWrap.Events.register('afteraction', null, tryScan);
     WazeWrap.Events.register('moveend', null, checkOptions);
+    WazeWrap.Events.register('afteraction', null, tryScan);
+
+    new WazeWrap.Interface.Shortcut('addShield', 'Activates the Add Shield Button', 'wmersa', 'Road Shield Assistant', rsaSettings.addShield, addShieldClick, null).add();
 
     setEleStatus();
 
@@ -878,6 +933,17 @@ async function setupOptions() {
         setEleStatus();
         removeHighlights();
         tryScan();
+    });
+    $('#rsa-titleCase').click(function () {
+        if (getId('rsa-titleCase').checked) {
+            $('#rsa-container-checkTWD').css('display', 'block');
+            $('#rsa-container-checkTTS').css('display', 'block');
+            $('#rsa-container-checkVI').css('display', 'block');
+        } else {
+            $('#rsa-container-checkTWD').css('display', 'none');
+            $('#rsa-container-checkTTS').css('display', 'none');
+            $('#rsa-container-checkVI').css('display', 'none');
+        }
     });
     // $('#rsa-ShowNodeShields').click(function() {
     //     if (!getId('rsa-ShowNodeShields').checked) $('.rsa-option-container.sub').hide();
@@ -958,9 +1024,14 @@ async function loadSettings() {
         SegHasDirClr: '#ffff00',
         SegInvDirClr: '#66ffff',
         TitleCaseClr: '#ff9933',
+        TitleCaseSftClr: '#ffff66',
         ShowRamps: true,
         mHPlus: false,
-        titleCase: false
+        titleCase: false,
+        checkTWD: false,
+        checkTTS: false,
+        checkVI: false,
+        addShield: ''
     };
 
     rsaSettings = $.extend({}, defaultSettings, localSettings);
@@ -1004,9 +1075,14 @@ async function saveSettings() {
         SegHasDirClr,
         SegInvDirClr,
         TitleCaseClr,
+        TitleCaseSftClr,
         ShowRamps,
         mHPlus,
-        titleCase
+        titleCase,
+        checkTWD,
+        checkTTS,
+        checkVI,
+        addShield
     } = rsaSettings;
 
     const localSettings = {
@@ -1034,15 +1110,20 @@ async function saveSettings() {
         SegHasDirClr,
         SegInvDirClr,
         TitleCaseClr,
+        TitleCaseSftClr,
         ShowRamps,
         mHPlus,
-        titleCase
+        titleCase,
+        checkTWD,
+        checkTTS,
+        checkVI,
+        addShield
     };
 
-    /* // Grab keyboard shortcuts and store them for saving
+    // Grab keyboard shortcuts and store them for saving
     for (const name in W.accelerators.Actions) {
         const {shortcut, group} = W.accelerators.Actions[name];
-        if (group === 'wmelt') {
+        if (group === 'wmersa') {
             let TempKeys = '';
             if (shortcut) {
                 if (shortcut.altKey === true) {
@@ -1068,7 +1149,7 @@ async function saveSettings() {
     }
 
     // Required for the instant update of changes to the keyboard shortcuts on the UI
-    rsaSettings = localSettings; */
+    rsaSettings = localSettings;
 
     if (localStorage) {
         localStorage.setItem('RSA_Settings', JSON.stringify(localSettings));
@@ -1132,10 +1213,94 @@ function checkOptions() {
             $(`#rsa-NodeShieldMissing`).prop('disabled', false);
         }
     }
+
+    if (W.model.getTopCountry().id !== 235) {
+        $('#rsa-container-titleCase').css('display', 'none');
+        $('#rsa-container-TitleCaseClr').css('display', 'none');
+        $('#rsa-container-TitleCaseSftClr').css('display', 'none');
+    } else {
+        $('#rsa-container-titleCase').css('display', 'block');
+        $('#rsa-container-TitleCaseClr').css('display', 'block');
+        $('#rsa-container-TitleCaseSftClr').css('display', 'block');
+    }
+}
+
+function autoFixButton() {
+    $('#rsa-autoWrapper').css('display', 'inline-block');
+    $('#rsa-autoWrapper > div').off();
+
+    // console.log(BadNames);
+    // Create function to fix case types when button clicked
+    $('#rsa-autoWrapper > div').click(function() {
+        const turnGraph = W.model.getTurnGraph();
+
+        for (let i=0; i < BadNames.length; i++) {
+            // Check if street or turn
+            if (BadNames[i].type) {
+                let strt = BadNames[i];
+                let dir = strt.direction;
+
+                if (dir.match(/\b(north)\b/i) != null)  dir = 'Nᴏʀᴛʜ';
+                if (dir.match(/\b(south)\b/i) != null)  dir = 'Sᴏᴜᴛʜ';
+                if (dir.match(/\b(east)\b/i) != null)  dir = 'Eᴀꜱᴛ';
+                if (dir.match(/\b(west)\b/i) != null)  dir = 'Wᴇꜱᴛ';
+
+                W.model.actionManager.add(new UpdateObj(strt, { 'direction': dir }));
+            } else {
+                function fixName(name) {
+                    let temp = name;
+                    temp = temp.replace(/\b(north)\b/ig, 'Nᴏʀᴛʜ');
+                    temp = temp.replace(/\b(south)\b/ig, 'Sᴏᴜᴛʜ');
+                    temp = temp.replace(/\b(east)\b/ig, 'Eᴀꜱᴛ');
+                    temp = temp.replace(/\b(west)\b/ig, 'Wᴇꜱᴛ');
+
+                    temp = temp.replace(/\b(TO)\b/ig, 'ᴛᴏ');
+                    temp = temp.replace(/\b(VIA)\b/ig, 'ᴠɪᴀ');
+                    temp = temp.replace(/\b(JCT)\b/ig, 'ᴊᴄᴛ');
+                    return temp;
+                }
+
+                let turn = BadNames[i];
+                let turnDat = turn.getTurnData();
+                let turnGuid = turnDat.getTurnGuidance();
+                let newGuid = turnGuid;
+                console.log(turn);
+                for (s in turnGuid.roadShields) {
+                    turnGuid.roadShields[s].direction = fixName(turnGuid.roadShields[s].direction);
+                };
+                if (rsaSettings.checkTWD && turnGuid.towards) turnGuid.towards = fixName(turnGuid.towards);
+                if (rsaSettings.checkTTS && turnGuid.tts) turnGuid.tts = fixName(turnGuid.tts);
+                if (rsaSettings.checkVI && turnGuid.visualInstruction) turnGuid.visualInstruction = fixName(turnGuid.visualInstruction);
+
+                console.log(turnGuid);
+                turnDat = turnDat.withTurnGuidance(turnGuid);
+                W.model.actionManager.add(new SetTurn(turnGraph, turn.withTurnData(turnDat)));
+            }
+        }
+    });
+}
+
+function removeAutoFixButton() {
+    $('#rsa-autoWrapper > div').off();
+    $('#rsa-autoWrapper').css('display', 'none');
+}
+
+function addShieldClick() {
+    const selFea = W.selectionManager.getSelectedFeatures();
+    if (selFea && selFea.length === 1 && selFea[0].model.type === 'segment') {
+        $('.add-new-road-shield').click();
+    } else {
+        WazeWrap.Alerts.error(GM_info.script.name, 'You must have only 1 segment selected to use the shield editing menu');
+    }
+
+    
 }
 
 function tryScan() {
     if (!rsaSettings.enableScript) return;
+
+    // Reset the array of objects that need names fixed
+    BadNames = [];
 
     function scanNode(node) {
         let conSegs = node.attributes.segIDs;
@@ -1208,7 +1373,10 @@ function processSeg(seg, showNode = false) {
     // Streets without capitalized letters
     if (rsaSettings.titleCase) {
         const badName = matchTitleCase(street);
-        if (badName === true) createHighlight(seg, rsaSettings.TitleCaseClr, true);
+        if (badName === true) {
+            createHighlight(seg, rsaSettings.TitleCaseClr, true);
+            // autoFixButton();
+        }
     }
 }
 
@@ -1218,12 +1386,15 @@ function processNode(node, seg1, seg2) {
     let hasGuidence = turnData.hasTurnGuidance();
 
     if (hasGuidence) {
-        const guidance = turnData.getTurnGuidance();
         if (rsaSettings.ShowNodeShields && W.map.getZoom() > 2) displayNodeIcons(node, turnData);
 
         if (rsaSettings.titleCase) {
-            let badName = matchTitleCaseThroughNode(guidance);
-            if (badName === true) createHighlight(node, rsaSettings.TitleCaseClr, true);
+            let badName = matchTitleCaseThroughNode(turn);
+            if (badName.isBad === true) {
+                let color = badName.softIssue ? rsaSettings.TitleCaseSftClr: rsaSettings.TitleCaseClr;
+                createHighlight(node, color, true);
+                // autoFixButton();
+            }
         }
     }
     
@@ -1274,31 +1445,43 @@ function matchTitleCase(street) {
     const dir = street.direction;
     let isBad = false;
     if (dir !== '' && dir !== null) {
-        //console.log(dir);
-        if (dir.match(/(north)/i) != null) isBad = true;
-        if (dir.match(/(south)/i) != null) isBad = true;
-        if (dir.match(/(east)/i) != null) isBad = true;
-        if (dir.match(/(west)/i) != null) isBad = true;
+        // console.log(dir);
+        if (dir.match(/\b(north|south|east|west)\b/i) != null) isBad = true;
         if (dir.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) isBad = true;
 
+        if (isBad === true) {
+            if (BadNames.length === 0) {
+                BadNames.push(street);
+            } else {
+                let isDuplicate = false;
+                for (let i=0; i < BadNames.length; i++) {
+                    // if (BadNames[i].type) console.log(BadNames[i].id === street.id);
+                    if (BadNames[i].type && BadNames[i].id === street.id) isDuplicate = true;
+                }
+                if (!isDuplicate) BadNames.push(street);
+            }
+        }
     }
     return isBad;
 }
 
-function matchTitleCaseThroughNode(turnGuid) {
+function matchTitleCaseThroughNode(turn) {
+    const turnData = turn.getTurnData();
+    const turnGuid = turnData.getTurnGuidance();
     const shields = turnGuid.getRoadShields();
     const twd = turnGuid.getTowards();
     const tts = turnGuid.getTTS();
     const VI = turnGuid.getVisualInstruction();
-    let isBad = false;
+    let info = {
+        isBad: false,
+        softIssue: false
+    };
 
-    function checkText(txt) {
+    function checkText(txt, isSoft = false) {
         if (txt !== '' && txt !== null) {
-            if (txt.match(/(north)/i) != null) isBad = true;
-            if (txt.match(/(south)/i) != null) isBad = true;
-            if (txt.match(/(east)/i) != null) isBad = true;
-            if (txt.match(/(west)/i) != null) isBad = true;
-            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) isBad = true;
+            if (txt.match(/\b(north|south|east|west)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/\b(TO|VIA|JCT)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
         }
     }
 
@@ -1307,11 +1490,13 @@ function matchTitleCaseThroughNode(turnGuid) {
             checkText(s.direction);
         });
     }
-    if (twd && twd !== "") checkText(twd);
-    if (tts && tts !== "") checkText(tts);
-    if (VI && VI !== "") checkText(VI);
+    if (twd && twd !== "" && rsaSettings.checkTWD) checkText(twd, true);
+    if (tts && tts !== "" && rsaSettings.checkTTS) checkText(tts, true);
+    if (VI && VI !== "" && rsaSettings.checkVI) checkText(VI, true);
 
-    return isBad;
+    if (info.isBad === true) BadNames.push(turn);
+
+    return info;
 }
 
 function displayNodeIcons(node, turnDat) {
