@@ -1345,7 +1345,7 @@ function processSeg(seg, showNode = false) {
     let cityID = W.model.cities.getObjectById(street.cityID);
     let stateName = W.model.states.getObjectById(cityID.attributes.stateID).name;
     let countryID = cityID.attributes.countryID;
-    let candidate = isStreetCandidate(street, stateName, countryID);
+    let candidate = isSegmentCandidate(segAtt, stateName, countryID);
     let hasShield = street.signType !== null;
 
     // Exlude ramps
@@ -1398,6 +1398,23 @@ function processNode(node, seg1, seg2) {
         }
     }
     
+}
+
+function isSegmentCandidate(segAtt, state, country) {
+    let street = W.model.streets.getObjectById(segAtt.primaryStreetID);
+    let candidate = isStreetCandidate(street, state, country);
+    if (candidate.isCandidate) {
+        return candidate;
+    }
+
+    for (var i = 0;i<segAtt.streetIDs.length;i++) {
+        street = W.model.streets.getObjectById(segAtt.streetIDs[i]);
+        candidate = isStreetCandidate(street, state, country);
+        if (candidate.isCandidate) {
+            return candidate;
+        }
+    }
+    return candidate;
 }
 
 function isStreetCandidate(street, state, country) {
