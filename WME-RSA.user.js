@@ -1358,7 +1358,15 @@ function processSeg(seg, showNode = false) {
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
 
     // If candidate and has shield
-    if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
+    if (candidate.isCandidate && hasShield) {
+        if (isValidShield(segAtt)) {
+            if (rsaSettings.HighSegShields) {
+                createHighlight(seg, rsaSettings.HighSegClr);
+            }
+        } else {
+            createHighlight(seg, rsaSettings.ErrSegClr);
+        }
+    }
 
     // If candidate and missing shield
     if (candidate.isCandidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
@@ -1456,6 +1464,20 @@ function isStreetCandidate(street, state, country) {
         }
     }
     return info;
+}
+
+function isValidShield(segAtt) {
+    let primaryStreet = W.model.streets.getObjectById(segAtt.primaryStreetID);
+    if (primaryStreet.name === primaryStreet.signText) {
+        return true;
+    }
+    for (var i = 0;i<segAtt.streetIDs.length;i++) {
+        let street = W.model.streets.getObjectById(segAtt.streetIDs[i]);
+        if (street.name === primaryStreet.signText) {
+            return true;
+        }
+    }
+    return false;
 }
 
 function matchTitleCase(street) {
