@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.07.27.01
+// @version      2021.07.27.02
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -24,7 +24,8 @@ const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
 - Added support for France to highlight features (Thanks kpouer!)<br>
 - Added French translations<br><br>
 <b>FIXES:</b><br>
-- Added Interstate and US Highways to DC<br><br>`;
+- Added Interstate and US Highways to DC<br>
+- Fixed the UI so it would actually appear and be useful<br><br>`;
 
 const RoadAbbr = {
     // Canada
@@ -671,7 +672,10 @@ const Strings = {
         'mHPlus': 'Only show on minor highways or greater',
         'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
         'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
-        'TitleCaseSftClr': 'Direction in free text might not be in large-and-small-caps format'
+        'TitleCaseSftClr': 'Direction in free text might not be in large-and-small-caps format',
+        'checkTWD': 'Include Towards field',
+        'checkTTS': 'Include TTS field',
+        'checkVI': 'Include Visual Instruction field'
     },
     'fr': {
         "enableScript":"Script activé",
@@ -758,146 +762,140 @@ function initRSA() {
             <div style='margin-bottom:5px;border-bottom:1px solid black;'>
                 <span style='font-weight:bold;'>
                     <a href='https://www.waze.com/forum/viewtopic.php?f=1851&t=315748' target='_blank' style='text-decoration:none;'>Road Shield Assistant</a>
-                    </span> - v${GM_info.script.version}
+                </span> - v${GM_info.script.version}
             </div>
             <div class='rsa-option-container'>
                 <input type=checkbox class='rsa-checkbox' id='rsa-enableScript' />
-                <label class='rsa-label' for='rsa-enableScript'><span id='rsa-text-enableScript' /></label>
+                <label class='rsa-label' for='rsa-enableScript'><span id='rsa-text-enableScript'></span></label>
             </div>
             <div class='rsa-option-container'>
                 <input type=checkbox class='rsa-checkbox' id='rsa-ShowRamps' />
-                <label class='rsa-label' for='rsa-ShowRamps'><span id='rsa-text-ShowRamps' /></label>
+                <label class='rsa-label' for='rsa-ShowRamps'><span id='rsa-text-ShowRamps'></span></label>
             </div>
             <div class='rsa-option-container'>
                 <input type=checkbox class='rsa-checkbox' id='rsa-mHPlus' />
-                <label class='rsa-label' for='rsa-mHPlus'><span id='rsa-text-mHPlus' /></label>
+                <label class='rsa-label' for='rsa-mHPlus'><span id='rsa-text-mHPlus'></span></label>
             </div>
 
-            <!-- Icons Section -->
-            <div id='rsa-text-IconHead' class='rsa-header' />
+            <span id='rsa-text-IconHead' class='rsa-header'></span>
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowSegShields' />
-                    <label class='rsa-label' for='rsa-ShowSegShields'><span id='rsa-text-ShowSegShields' /></label>
+                    <label class='rsa-label' for='rsa-ShowSegShields'><span id='rsa-text-ShowSegShields'></span></label>
                 </div>
                 <div class='rsa-option-container no-display'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-NodeShieldMissing' />
-                    <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing' /></label>
+                    <label class='rsa-label' for='rsa-NodeShieldMissing'><span id='rsa-text-NodeShieldMissing'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowNodeShields' />
-                    <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields' /></label>
+                    <label class='rsa-label' for='rsa-ShowNodeShields'><span id='rsa-text-ShowNodeShields'></span></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowExitShields' />
-                    <label class='rsa-label' for='rsa-ShowExitShields'><span id='rsa-text-ShowExitShields' /></label>
+                    <label class='rsa-label' for='rsa-ShowExitShields'><span id='rsa-text-ShowExitShields'></span></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowTurnTTS' />
-                    <label class='rsa-label' for='rsa-ShowTurnTTS'><span id='rsa-text-ShowTurnTTS' /></label>
+                    <label class='rsa-label' for='rsa-ShowTurnTTS'><span id='rsa-text-ShowTurnTTS'></span></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowTowards' />
-                    <label class='rsa-label' for='rsa-ShowTowards'><span id='rsa-text-ShowTowards' /></label>
+                    <label class='rsa-label' for='rsa-ShowTowards'><span id='rsa-text-ShowTowards'></span></label>
                 </div>
                 <div class='rsa-option-container sub'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-ShowVisualInst' />
-                    <label class='rsa-label' for='rsa-ShowVisualInst'><span id='rsa-text-ShowVisualInst' /></label>
+                    <label class='rsa-label' for='rsa-ShowVisualInst'><span id='rsa-text-ShowVisualInst'></span></label>
                 </div>
                 <div class='rsa-option-container sub' style='display:none;'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-AlertTurnTTS' />
-                    <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS' /></label>
+                    <label class='rsa-label' for='rsa-AlertTurnTTS'><span id='rsa-text-AlertTurnTTS'></span></label>
                 </div>
             </div>
-            <!-- End Icons Section -->
 
-            <!-- Highlights Section -->
-            <div id='rsa-text-HighlightHead' class='rsa-header' />
+            <span id='rsa-text-HighlightHead' class='rsa-header'></span>
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container' style='display:none;'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-HighNodeShields' />
-                    <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields' /></label>
+                    <label class='rsa-label' for='rsa-HighNodeShields'><span id='rsa-text-HighNodeShields'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-HighSegShields' />
-                    <label class='rsa-label' for='rsa-HighSegShields'><span id='rsa-text-HighSegShields' /></label>
+                    <label class='rsa-label' for='rsa-HighSegShields'><span id='rsa-text-HighSegShields'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegHasDir' />
-                    <label class='rsa-label' for='rsa-SegHasDir'><span id='rsa-text-SegHasDir' /></label>
+                    <label class='rsa-label' for='rsa-SegHasDir'><span id='rsa-text-SegHasDir'></span></label>
                 </div>
                 <div class='rsa-option-container' id='rsa-container-titleCase'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-titleCase' />
-                    <label class='rsa-label' for='rsa-titleCase'><span id='rsa-text-titleCase' /></label>
+                    <label class='rsa-label' for='rsa-titleCase'><span id='rsa-text-titleCase'></span></label>
                 </div>
                 <div class='rsa-option-container sub' id='rsa-container-checkTWD'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-checkTWD' />
-                    <label class='rsa-label' for='rsa-checkTWD'><span id='rsa-text-checkTWD' /></label>
+                    <label class='rsa-label' for='rsa-checkTWD'><span id='rsa-text-checkTWD'></span></label>
                 </div>
                 <div class='rsa-option-container sub' id='rsa-container-checkTTS'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-checkTTS' />
-                    <label class='rsa-label' for='rsa-checkTTS'><span id='rsa-text-checkTTS' /></label>
+                    <label class='rsa-label' for='rsa-checkTTS'><span id='rsa-text-checkTTS'></span></label>
                 </div>
                 <div class='rsa-option-container sub' id='rsa-container-checkVI'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-checkVI' />
-                    <label class='rsa-label' for='rsa-checkVI'><span id='rsa-text-checkVI' /></label>
+                    <label class='rsa-label' for='rsa-checkVI'><span id='rsa-text-checkVI'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegInvDir' />
-                    <label class='rsa-label' for='rsa-SegInvDir'><span id='rsa-text-SegInvDir' /></label>
+                    <label class='rsa-label' for='rsa-SegInvDir'><span id='rsa-text-SegInvDir'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldMissing' />
-                    <label class='rsa-label' for='rsa-SegShieldMissing'><span id='rsa-text-SegShieldMissing' /></label>
+                    <label class='rsa-label' for='rsa-SegShieldMissing'><span id='rsa-text-SegShieldMissing'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldError' />
-                    <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError' /></label>
+                    <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError'></span></label>
                 </div>
             </div>
-            <!-- End Highlights Section -->
 
-            <!-- Color Picker Section -->
-            <div id='rsa-text-HighlightColors' class='rsa-header' />
+            <span id='rsa-text-HighlightColors' class='rsa-header'></span>
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-HighSegClr' />
-                    <label class='rsa-label' for='rsa-HighSegClr'><span id='rsa-text-HighSegShieldsClr' /></label>
+                    <label class='rsa-label' for='rsa-HighSegClr'><span id='rsa-text-HighSegShieldsClr'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-SegHasDirClr' />
-                    <label class='rsa-label' for='rsa-SegHasDirClr'><span id='rsa-text-SegHasDirClr' /></label>
+                    <label class='rsa-label' for='rsa-SegHasDirClr'><span id='rsa-text-SegHasDirClr'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-SegInvDirClr' />
-                    <label class='rsa-label' for='rsa-SegInvDirClr'><span id='rsa-text-SegInvDirClr' /></label>
+                    <label class='rsa-label' for='rsa-SegInvDirClr'><span id='rsa-text-SegInvDirClr'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-MissSegClr' />
-                    <label class='rsa-label' for='rsa-MissSegClr'><span id='rsa-text-SegShieldMissingClr' /></label>
+                    <label class='rsa-label' for='rsa-MissSegClr'><span id='rsa-text-SegShieldMissingClr'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-ErrSegClr' />
-                    <label class='rsa-label' for='rsa-ErrSegClr'><span id='rsa-text-SegShieldErrorClr' /></label>
+                    <label class='rsa-label' for='rsa-ErrSegClr'><span id='rsa-text-SegShieldErrorClr'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-HighNodeClr' />
-                    <label class='rsa-label' for='rsa-HighNodeClr'><span id='rsa-text-HighNodeShieldsClr' /></label>
+                    <label class='rsa-label' for='rsa-HighNodeClr'><span id='rsa-text-HighNodeShieldsClr'></span></label>
                 </div>
                 <div class='rsa-option-container no-display'>
                     <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
-                    <label class='rsa-label' for='rsa-MissNodeClr'><span id='rsa-text-NodeShieldMissingClr' /></label>
+                    <label class='rsa-label' for='rsa-MissNodeClr'><span id='rsa-text-NodeShieldMissingClr'></span></label>
                 </div>
                 <div class='rsa-option-container' id='rsa-container-TitleCaseClr'>
                     <input type=color class='rsa-color-input' id='rsa-TitleCaseClr' />
-                    <label class='rsa-label' for='rsa-TitleCaseClr'><span id='rsa-text-TitleCaseClr' /></label>
+                    <label class='rsa-label' for='rsa-TitleCaseClr'><span id='rsa-text-TitleCaseClr'></span></label>
                 </div>
                 <div class='rsa-option-container' id='rsa-container-TitleCaseSftClr'>
                     <input type=color class='rsa-color-input' id='rsa-TitleCaseSftClr' />
-                    <label class='rsa-label' for='rsa-TitleCaseSftClr'><span id='rsa-text-TitleCaseSftClr' /></label>
+                    <label class='rsa-label' for='rsa-TitleCaseSftClr'><span id='rsa-text-TitleCaseSftClr'></span></label>
                 </div>
             </div>
-            <!-- End Color Picker Section -->
 
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
