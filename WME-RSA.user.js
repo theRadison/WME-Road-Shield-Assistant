@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.07.12.01
+// @version      2021.07.26.00
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -20,6 +20,8 @@
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
+- Checks to see if small caps used in TTS field and highlights (which TTS won't speak)<br><br>
+- Add Interstate and US Highways to DC<br><br>
 - Highlight for segments and nodes when the small caps format is not followed(USA format)<br><br>
 <b>FIXES:</b><br>
 <br><br>`;
@@ -114,6 +116,8 @@ const RoadAbbr = {
             "SR-": 7
         },
         "District of Columbia": {
+            'I-': 5,
+            'US-': 6,
             "DC-": 7
         },
         "Florida": {
@@ -1481,17 +1485,24 @@ function matchTitleCaseThroughNode(turn) {
         if (txt !== '' && txt !== null) {
             if (txt.match(/\b(north|south|east|west)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
             if (txt.match(/\b(TO|VIA|JCT)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
-            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
         }
     }
 
+    function checkTTStext(txt, isSoft = false) {
+        if (txt !== '' && txt !== null) {
+            if (txt.match(/\b(Nᴏʀᴛʜ|Sᴏᴜᴛʜ|Eᴀꜱᴛ|Wᴇꜱᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/\b(ᴛᴏ|ᴠɪᴀ|ᴊᴄᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+        }
+    }
     if (shields) {
         _.each(shields, (s) => {
             checkText(s.direction);
         });
     }
     if (twd && twd !== "" && rsaSettings.checkTWD) checkText(twd, true);
-    if (tts && tts !== "" && rsaSettings.checkTTS) checkText(tts, true);
+    if (tts && tts !== "" && rsaSettings.checkTTS) checkTTStext(tts, true);
     if (VI && VI !== "" && rsaSettings.checkVI) checkText(VI, true);
 
     if (info.isBad === true) BadNames.push(turn);
