@@ -20,11 +20,11 @@
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Highlight for segments and nodes when the small caps format is not followed(USA format)<br>
+- Check to see if small caps used in TTS field and highlights (which TTS won't speak)<br>
 - Added support for France to highlight features (Thanks kpouer!)<br>
 - Added French translations<br><br>
 <b>FIXES:</b><br>
-<br><br>`;
+- Added Interstate and US Highways to DC<br><br>`;
 
 const RoadAbbr = {
     // Canada
@@ -37,12 +37,12 @@ const RoadAbbr = {
     // France
     73: {
         '': {
-            'D[0-9]+.*': 1092,
-            'N[0-9]+.*': 1072,
-            'A[0-9]+.*': 1072,
-            'M[0-9]+.*': 1067,
-            'C[0-9]+.*': 3333,
-            'T[0-9]+.*': 3037
+            'D[0-9]+[^:]*': 1092,
+            'N[0-9]+[^:]*': 1072,
+            'A[0-9]+[^:]*': 1072,
+            'M[0-9]+[^:]*': 1067,
+            'C[0-9]+[^:]*': 3333,
+            'T[0-9]+[^:]*': 3037
         }
     },
     // Germany
@@ -125,6 +125,8 @@ const RoadAbbr = {
             "SR-": 7
         },
         "District of Columbia": {
+            'I-': 5,
+            'US-': 6,
             "DC-": 7
         },
         "Florida": {
@@ -480,6 +482,49 @@ const RoadAbbr = {
        '': {
            'Ruta': 1111
        } 
+    },
+
+    // Réunion
+    262: {
+        '': {
+            'D[0-9]+[^:]*': 1092,
+            'N[0-9]+[^:]*': 1072
+        }
+    },
+    // Guadeloupe
+    590: {
+        '': {
+            'D[0-9]+[^:]*': 1092,
+            'N[0-9]+[^:]*': 1072
+        }
+    },
+    // French Guyana
+    594: {
+        '': {
+            'D[0-9]+[^:]*': 1092,
+            'N[0-9]+[^:]*': 1072
+        }
+    },
+    // Martinique
+    596: {
+        '': {
+            'D[0-9]+[^:]*': 1092,
+            'N[0-9]+[^:]*': 1072
+        }
+    },
+    // Wallis and Futuna
+    681: {
+        '': {
+            'D[0-9]+[^:]*': 1092,
+            'N[0-9]+[^:]*': 1072
+        }
+    },
+    // French Polynesia
+    689: {
+        '': {
+            'D[0-9]+[^:]*': 1092,
+            'N[0-9]+[^:]*': 1072
+        }
     }
 };
 const Strings = {
@@ -627,6 +672,43 @@ const Strings = {
         'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
         'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
         'TitleCaseSftClr': 'Direction in free text might not be in large-and-small-caps format'
+    },
+    'fr': {
+        "enableScript":"Script activé",
+        "HighSegShields":"Segments avec cartouche",
+        "HighSegShieldsClr":"Segments avec cartouche",
+        "ShowSegShields":"Afficher les cartouches sur la carte", 
+        "SegShieldMissing":"Segments dont le cartouche pourrait manquer", 
+        "SegShieldMissingClr":"Segments dont le cartouche pourrait manquer", 
+        "SegShieldError":"Segments ayant un cartouche mais ne devraient peut-être pas", 
+        "SegShieldErrorClr":"Segments ayant un cartouche mais ne devraient peut-être pas", 
+        "HighNodeShields":"Noeuds avec cartouche (TG)", 
+        "HighNodeShieldsClr":"Noeuds avec cartouche (TG)", 
+        "ShowNodeShields":"Afficher les infos des cartouches de noeuds", 
+        "ShowExitShields":"As des panneaux de sortie", 
+        "ShowTurnTTS":"Has TIO", 
+        "AlertTurnTTS":"Alert if TTS is different from default", 
+        "NodeShieldMissing":"Noeud dont le cartouche pourrait manquer", 
+        "NodeShieldMissingClr":"Noeud dont le cartouche pourrait manquer", 
+        "resetSettings":"Réinitialiser les paramètres", 
+        "disabledFeat":"Feature not configured for this country", 
+        "ShowTowards":'As "En direction de"', 
+        "ShowVisualInst":"As des instructions visuelles", 
+        "SegHasDir":"Cartouche de segment avec direction", 
+        "SegHasDirClr":"Cartouche de segment avec direction", 
+        "SegInvDir":"Cartouche de segment sans direction", 
+        "SegInvDirClr":"Cartouche de segment sans direction", 
+        "IconHead":"Icônes de carte", 
+        "HighlightHead":"Surlignages", 
+        "HighlightColors":"Couleurs de surlignage", 
+        "ShowRamps":"Inclure les bretelles", 
+        "mHPlus":"Only show on minor highways or greater", 
+        "titleCase":"Segments/nodes with direction not in large-and-small-caps format", 
+        "TitleCaseClr":"Segments/nodes with direction not in large-and-small-caps format", 
+        "TitleCaseSftClr":"Direction in free text might not be in large-and-small-caps format", 
+        "checkTWD":'Inclure le champ "en direction de"', 
+        "checkTTS":"Inclure le champ TTS", 
+        "checkVI":"Inclure le champ d'instruction visuel"
     }
 };
 let BadNames = [];
@@ -1355,7 +1437,7 @@ function processSeg(seg, showNode = false) {
     let cityID = W.model.cities.getObjectById(street.cityID);
     let stateName = W.model.states.getObjectById(cityID.attributes.stateID).name;
     let countryID = cityID.attributes.countryID;
-    let candidate = isSegmentCandidate(street, stateName, countryID);
+    let candidate = isSegmentCandidate(segAtt, stateName, countryID);
     let hasShield = street.signType !== null;
 
     // Exlude ramps
@@ -1368,7 +1450,15 @@ function processSeg(seg, showNode = false) {
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
 
     // If candidate and has shield
-    if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
+    if (candidate.isCandidate && hasShield) {
+        if (isValidShield(segAtt)) {
+            if (rsaSettings.HighSegShields) {
+                createHighlight(seg, rsaSettings.HighSegClr);
+            }
+        } else {
+            createHighlight(seg, rsaSettings.ErrSegClr);
+        }
+    }
 
     // If candidate and missing shield
     if (candidate.isCandidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
@@ -1469,6 +1559,20 @@ function isStreetCandidate(street, state, country) {
     return info;
 }
 
+function isValidShield(segAtt) {
+    let primaryStreet = W.model.streets.getObjectById(segAtt.primaryStreetID);
+    if (primaryStreet.name === primaryStreet.signText) {
+        return true;
+    }
+    for (var i = 0;i<segAtt.streetIDs.length;i++) {
+        let street = W.model.streets.getObjectById(segAtt.streetIDs[i]);
+        if (street.name === primaryStreet.signText) {
+            return true;
+        }
+    }
+    return false;
+}
+
 function matchTitleCase(street) {
     const dir = street.direction;
     let isBad = false;
@@ -1509,7 +1613,15 @@ function matchTitleCaseThroughNode(turn) {
         if (txt !== '' && txt !== null) {
             if (txt.match(/\b(north|south|east|west)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
             if (txt.match(/\b(TO|VIA|JCT)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
-            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+        }
+    }
+
+    function checkTTStext(txt, isSoft = false) {
+        if (txt !== '' && txt !== null) {
+            if (txt.match(/\b(Nᴏʀᴛʜ|Sᴏᴜᴛʜ|Eᴀꜱᴛ|Wᴇꜱᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/\b(ᴛᴏ|ᴠɪᴀ|ᴊᴄᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
         }
     }
 
@@ -1519,7 +1631,7 @@ function matchTitleCaseThroughNode(turn) {
         });
     }
     if (twd && twd !== "" && rsaSettings.checkTWD) checkText(twd, true);
-    if (tts && tts !== "" && rsaSettings.checkTTS) checkText(tts, true);
+    if (tts && tts !== "" && rsaSettings.checkTTS) checkTTStext(tts, true);
     if (VI && VI !== "" && rsaSettings.checkVI) checkText(VI, true);
 
     if (info.isBad === true) BadNames.push(turn);
