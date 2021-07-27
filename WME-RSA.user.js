@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.07.26.00
+// @version      2021.07.26.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -20,9 +20,9 @@
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Checks to see if small caps used in TTS field and highlights (which TTS won't speak)<br><br>
-- Add Interstate and US Highways to DC<br><br>
-- Highlight for segments and nodes when the small caps format is not followed(USA format)<br><br>
+- Highlight for segments and nodes when the small caps format is not followed(USA format)<br>
+- Added support for France to highlight features (Thanks kpouer!)<br>
+- Added French translations<br><br>
 <b>FIXES:</b><br>
 <br><br>`;
 
@@ -37,12 +37,12 @@ const RoadAbbr = {
     // France
     73: {
         '': {
-            'D[0-9]+[^:]*': 1092,
-            'N[0-9]+[^:]*': 1072,
-            'A[0-9]+[^:]*': 1072,
-            'M[0-9]+[^:]*': 1067,
-            'C[0-9]+[^:]*': 3333,
-            'T[0-9]+[^:]*': 3037
+            'D[0-9]+.*': 1092,
+            'N[0-9]+.*': 1072,
+            'A[0-9]+.*': 1072,
+            'M[0-9]+.*': 1067,
+            'C[0-9]+.*': 3333,
+            'T[0-9]+.*': 3037
         }
     },
     // Germany
@@ -69,7 +69,6 @@ const RoadAbbr = {
            '(С[0-9]{6,7})': 1085
        } 
     },
-
     // US
     235: {
         "Alabama": {
@@ -126,8 +125,6 @@ const RoadAbbr = {
             "SR-": 7
         },
         "District of Columbia": {
-            'I-': 5,
-            'US-': 6,
             "DC-": 7
         },
         "Florida": {
@@ -478,54 +475,11 @@ const RoadAbbr = {
             "WY-": 2143,
         }
     },
-
     // Uruguay
     236: {
        '': {
            'Ruta': 1111
        } 
-    },
-    // Réunion
-    262: {
-        '': {
-            'D[0-9]+[^:]*': 1092,
-            'N[0-9]+[^:]*': 1072
-        }
-    },
-    // Guadeloupe
-    590: {
-        '': {
-            'D[0-9]+[^:]*': 1092,
-            'N[0-9]+[^:]*': 1072
-        }
-    },
-    // French Guyana
-    594: {
-        '': {
-            'D[0-9]+[^:]*': 1092,
-            'N[0-9]+[^:]*': 1072
-        }
-    },
-    // Martinique
-    596: {
-        '': {
-            'D[0-9]+[^:]*': 1092,
-            'N[0-9]+[^:]*': 1072
-        }
-    },
-    // Wallis and Futuna
-    681: {
-        '': {
-            'D[0-9]+[^:]*': 1092,
-            'N[0-9]+[^:]*': 1072
-        }
-    },
-    // French Polynesia
-    689: {
-        '': {
-            'D[0-9]+[^:]*': 1092,
-            'N[0-9]+[^:]*': 1072
-        }
     }
 };
 const Strings = {
@@ -1401,7 +1355,7 @@ function processSeg(seg, showNode = false) {
     let cityID = W.model.cities.getObjectById(street.cityID);
     let stateName = W.model.states.getObjectById(cityID.attributes.stateID).name;
     let countryID = cityID.attributes.countryID;
-    let candidate = isSegmentCandidate(segAtt, stateName, countryID);
+    let candidate = isSegmentCandidate(street, stateName, countryID);
     let hasShield = street.signType !== null;
 
     // Exlude ramps
@@ -1414,15 +1368,7 @@ function processSeg(seg, showNode = false) {
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
 
     // If candidate and has shield
-    if (candidate.isCandidate && hasShield) {
-        if (isValidShield(segAtt)) {
-            if (rsaSettings.HighSegShields) {
-                createHighlight(seg, rsaSettings.HighSegClr);
-            }
-        } else {
-            createHighlight(seg, rsaSettings.ErrSegClr);
-        }
-    }
+    if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) createHighlight(seg, rsaSettings.HighSegClr);
 
     // If candidate and missing shield
     if (candidate.isCandidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
@@ -1464,6 +1410,7 @@ function processNode(node, seg1, seg2) {
     
 }
 
+// Function written by kpouer to accommodate French conventions of shields being based on alt names
 function isSegmentCandidate(segAtt, state, country) {
     let street = W.model.streets.getObjectById(segAtt.primaryStreetID);
     let candidate = isStreetCandidate(street, state, country);
@@ -1471,7 +1418,7 @@ function isSegmentCandidate(segAtt, state, country) {
         return candidate;
     }
 
-    for (var i = 0;i<segAtt.streetIDs.length;i++) {
+    for (let i = 0; i < segAtt.streetIDs.length; i++) {
         street = W.model.streets.getObjectById(segAtt.streetIDs[i]);
         candidate = isStreetCandidate(street, state, country);
         if (candidate.isCandidate) {
@@ -1522,20 +1469,6 @@ function isStreetCandidate(street, state, country) {
     return info;
 }
 
-function isValidShield(segAtt) {
-    let primaryStreet = W.model.streets.getObjectById(segAtt.primaryStreetID);
-    if (primaryStreet.name === primaryStreet.signText) {
-        return true;
-    }
-    for (var i = 0;i<segAtt.streetIDs.length;i++) {
-        let street = W.model.streets.getObjectById(segAtt.streetIDs[i]);
-        if (street.name === primaryStreet.signText) {
-            return true;
-        }
-    }
-    return false;
-}
-
 function matchTitleCase(street) {
     const dir = street.direction;
     let isBad = false;
@@ -1576,24 +1509,17 @@ function matchTitleCaseThroughNode(turn) {
         if (txt !== '' && txt !== null) {
             if (txt.match(/\b(north|south|east|west)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
             if (txt.match(/\b(TO|VIA|JCT)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
-            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/)  != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
         }
     }
 
-    function checkTTStext(txt, isSoft = false) {
-        if (txt !== '' && txt !== null) {
-            if (txt.match(/\b(Nᴏʀᴛʜ|Sᴏᴜᴛʜ|Eᴀꜱᴛ|Wᴇꜱᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
-            if (txt.match(/\b(ᴛᴏ|ᴠɪᴀ|ᴊᴄᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
-            if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
-        }
-    }
     if (shields) {
         _.each(shields, (s) => {
             checkText(s.direction);
         });
     }
     if (twd && twd !== "" && rsaSettings.checkTWD) checkText(twd, true);
-    if (tts && tts !== "" && rsaSettings.checkTTS) checkTTStext(tts, true);
+    if (tts && tts !== "" && rsaSettings.checkTTS) checkText(tts, true);
     if (VI && VI !== "" && rsaSettings.checkVI) checkText(VI, true);
 
     if (info.isBad === true) BadNames.push(turn);
