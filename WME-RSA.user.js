@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.07.26.01
+// @version      2021.07.26.02
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1619,8 +1619,8 @@ function matchTitleCaseThroughNode(turn) {
 
     function checkTTStext(txt, isSoft = false) {
         if (txt !== '' && txt !== null) {
-            if (txt.match(/\b(Nᴏʀᴛʜ|Sᴏᴜᴛʜ|Eᴀꜱᴛ|Wᴇꜱᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
-            if (txt.match(/\b(ᴛᴏ|ᴠɪᴀ|ᴊᴄᴛ)\b/i) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/(Nᴏʀᴛʜ|Sᴏᴜᴛʜ|Eᴀꜱᴛ|Wᴇꜱᴛ)/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
+            if (txt.match(/(ᴛᴏ|ᴠɪᴀ|ᴊᴄᴛ)/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
             if (txt.match(/([ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ][a-z]|[a-z][ᴀʙᴄᴅᴇꜰɢʜɪᴊᴋʟᴍɴᴏᴘʀꜱᴛᴜᴠᴡʏᴢ])/) != null) { info.isBad = true; if (isSoft) info.softIssue = true; }
         }
     }
