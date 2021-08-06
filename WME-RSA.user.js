@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.07.27.02
+// @version      2021.08.06.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -20,21 +20,111 @@
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
-- Check to see if small caps used in TTS field and highlights (which TTS won't speak)<br>
-- Added support for France to highlight features (Thanks kpouer!)<br>
-- Added French translations<br><br>
+- Updated shields for Canada<br><br>
 <b>FIXES:</b><br>
-- Added Interstate and US Highways to DC<br>
-- Fixed the UI so it would actually appear and be useful<br><br>`;
+- No longer highlights alt street names when it shouldn't<br><br>`;
 
 const RoadAbbr = {
-    // Canada
-    40: {
-        'Ontario': {
-            'Hwy': 5063, // 5000: Trans-Canada Hwy
-            'Trans-Canada Hwy': 5000 // 5063: Ontario - Regional Hwy - Generic
-        }
-    },
+    //Canada    
+	40: {
+        "Alberta": {
+            'Hwy 1$': 5000, 						            // 5000: National-Trans-Canada Highway
+            'Hwy 1A': 5011,  						            // 5011: Alberta - Provincial Hwy
+            'Hwy 2': 5011,							            // 5011: Alberta - Provincial Hwy
+            'Hwy 3$' : 5015,						            // 5015: Alberta - Crowsnext Hwy
+            'Hwy 3A' : 5011,						            // 5011: Alberta - Provincial Hwy
+            'Hwy 16$' : 5000,						            // 5000: National-Trans-Canada Highway
+            'Hwy 16A' : 5011,						            // 5011: Alberta - Provincial Hwy
+            'Hwy ([4-9]|1[0-5])\b' : 5011, 					    // 5011: Alberta - Provincial Hwy
+            'Hwy (1[7-9]|[2-9]\d|1\d{2}|20\d|21[0-6])\b' : 5011,// 5011: Alberta - Provincial Hwy
+            'Hwy (21[7-9]|2[2-9]\d|[3-9]\d{2})\b' : 5011		// 5011: Alberta - Provincial Hwy
+		},
+		"British Columbia": {
+            'Hwy 1': 5000, 							            // 5000: National-Trans-Canada Highway
+            'Hwy 2': 5001,  						            // 5001: BC - Provincial Hwy
+            'Hwy 3': 5002,  						            // 5002: BC - Crowsnest Hwy
+            'Hwy 16': 5000,							            // 5000: National-Trans-Canada Highway
+            'Hwy 113': 5004,						            // 5004: BC - Nisga'a Hwy
+            'Hwy ([4-9]|[1-9]\d|10\d|11[0-2])\b' : 5001,		// 5001: BC - Provincial Hwy
+            'Hwy (11[4-9]|1[2-9]\d|[2-9]\d{2})\b' : 5001		// 5001: BC - Provincial Hwy
+		},
+		"Saskatchewan": {
+            'Hwy 1': 5000, 							            // 5000: National - Trans-Canada Hwy
+            'Hwy 16' : 5000,						            // 5000: National - Trans-Canada Hwy
+            'Hwy ([2-9]|1[0-5])\b' : 5030,					    // 5030: Saskatchewan - Provincial Hwy
+            'Hwy (1[7-9]|[2-9]\d|[1-3]\d{2})\b' : 5030,			// 5030: Saskatchewan - Provincial Hwy
+            'Hwy (90\d|9[1-9]\d)\b' : 5031,					    // 5031: Saskatchewan - Northern Secondary Hwy
+            'Hwy (60\d|6[1-9]\d|7\d{2})\b' : 5032			    // 5032: Saskatchewan - Municipal Road
+		},
+		"Manitoba": {
+            'Hwy 1': 5000, 							            // 5000: National - Trans-Canada Hwy
+            'Hwy 16': 5000,							            // 5000: National - Trans-Canada Hwy
+            'Hwy ([2-9]|1[0-5])\b': 5038,					    // 5038: Manitoba - Provincial Trunk Highway
+            'Hwy (1[7-9]|[2-9]\d|1\d{2})\b': 5038,				// 5038: Manitoba - Provincial Trunk Highway
+            'Hwy (20\d|2[1-9]\d|[3-9]\d{2})\b': 5039			// 5039: Manitoba - Provincial Rd
+        },
+		"Ontario": {
+            'QEW': 5058, 							            // 5058: Ontario QEW
+            'Hwy 17' : 5000,						            // 5000: National - Trans-Canada Hwy
+            'Hwy 407 ETR' : 5060,						        // 5060: Ontario ETR
+            'Hwy 412' : 5059,						            // 5059: Ontario Toll Hwy
+            'Hwy 418' : 5059,						            // 5059: Ontario Toll Hwy
+            'Hwy ([1-9]|1[0-6])\b' : 5057,					    // 5057: Ontario King's Hwy 1-16
+            'Hwy (1[89]|[2-9]\d|[1-3]\d{2}|40[0-6])\b' : 5057,	// 5057: Ontario King's Hwy 18-406
+            'Hwy (40[89]|41[01])\b' : 5057,					    // 5057: Ontario King's Hwy 408-411
+            'Hwy (41[3-7])\b' : 5057,					        // 5057: Ontario King's Hwy 413-417
+            'Hwy (419|4[2-9]\d)\b' : 5057,					    // 5057: Ontario King's Hwy 419-499
+            'Hwy (50\d|5[1-9]\d|6\d{2})\b' : 5061,				// 5061: Ontario Secondary Hwy 500-699
+            'Hwy (80\d|8[1-9]\d)\b' : 5057					    // 5057: Ontario Tertiary Hwy
+		},
+		"Quebec": {
+            'Rte Transcanadienne' : 5093,					    // 5093: Quebec: Route Transcanadienne
+            'Aut ([1-9]|[1-9]\d{1,2})\b' : 5090,				// 5090: Quebec Autoroute 1-999
+            'Rte (10\d|1[1-9]\d|[23]\d{2})\b' : 5091,			// 5091: Quebec Route 100-399
+            'R (10\d|1[1-9]\d|[2-9]\d{2}|1[0-4]\d{2}|15[0-5]\d)\b' : 5092	// 5092: Quebec Route 100-1559
+		},
+		"New Brunswick": {
+            'Rte 2': 5000, 							            // 5000: Trans-Canada Hwy
+            'Rte 16': 5000,							            // 5000: Trans-Canada Hwy
+            'Rte 1': 5112,							            // 5112: NB Arterial Highway 1
+            'Rte ([3-9]|1[0-5])\b' : 5112,					    // 5112: NB Arterial Highway 3-15
+            'Rte (1[7-9]|[2-9]\d)\b' : 5112,				    // 5112: NB Arterial Highway 17-99
+            'Rte (10\d|1[1-9]\d)\b' : 511,					    // 5113: NB Collector Highway 100-199
+            'Rte (20\d|2[1-9]\d|[3-9]\d{2})\b' : 5114			// 5114: NB Local Highway 200-999
+		},
+		"Nova Scotia": {
+            'Hwy ([1-9]|[1-9]\d)\b': 5116, 					    // 5116: NS Trunk Hwy 1-99
+            'Hwy (10[0-4])\b': 5115,					        // 5115: NS Arterial Hwy 100-104
+            'Hwy (10[5-6])\b': 5000,					        // 5000: National Trans Canada Highway 105-106
+            'Hwy (10[7-9]|1[1-9]\d)\b' : 5115,				    // 5115: NS Aterial Hwy 107-199
+            'Hwy (20\d|2[1-9]\d|3\d{2})\b' : 5117				// 5117: NS Collector Hwy 200-399
+		},
+		"Newfoundland & Labrador": {
+            'Hwy 1': 5000, 							            // 5000: National - Trans-Canada Hwy 1
+            'Hwy ([2-9]|[1-9]\d|[1-5]\d{2})\b' : 5129			// NLR: Newfoundland Labrador Route 2-599
+		},
+		"Prince Edward Island": {
+            'Rte 1$': 5000,							            // 5000: National Trans-Canada Hwy
+            'Rte ([2-9]|[1-9]\d{1,2})\b' : 5144				    // 5144: PEI - Provincial Highway
+		},
+		"Yukon": {
+            'Hwy 1': 5145, 							            // 5145: Yukon - Territorial Hwy - Orange
+            'Hwy 2': 5146, 							            // 5146: Yukon - Territorial Hwy - Amber
+            'Hwy 3': 5147, 							            // 5147: Yukon - Territorial Hwy - Maroon
+            'Hwy 4': 5148, 							            // 5148: Yukon - Territorial Hwy - Brown
+            'Hwy 5': 5149, 							            // 5149: Yukon - Territorial Hwy - Blue
+            'Hwy 6': 5150, 							            // 5150: Yukon - Territorial Hwy - Teal
+            'Hwy 7': 5147, 							            // 5147: Yukon - Territorial Hwy - Maroon
+            'Hwy 8': 5148, 							            // 5148: Yukon - Territorial Hwy - Brown
+            'Hwy 9': 5151, 							            // 5151: Yukon - Territorial Hwy - Black
+            'Hwy 10': 5151, 						            // 5151: Yukon - Territorial Hwy - Black
+            'Hwy 11': 5149, 						            // 5149: Yukon - Territorial Hwy - Blue
+            'Hwy 37': 5147 							            // 5147: Yukon - Territorial Hwy - Maroon
+		},
+		"Northwest Territories": {
+            'Hwy ([1-9]|10)\b': 5152					        // 5152: NWT - Territorial Hwy 1-10
+		}
+	},
     // France
     73: {
         '': {
@@ -715,6 +805,10 @@ const Strings = {
         "checkVI":"Inclure le champ d'instruction visuel"
     }
 };
+const CheckAltName = [
+    // France
+    73
+];
 let BadNames = [];
 let rsaSettings;
 let UpdateObj;
@@ -827,6 +921,10 @@ function initRSA() {
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegHasDir' />
                     <label class='rsa-label' for='rsa-SegHasDir'><span id='rsa-text-SegHasDir'></span></label>
                 </div>
+                <div class='rsa-option-container'>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-SegInvDir' />
+                    <label class='rsa-label' for='rsa-SegInvDir'><span id='rsa-text-SegInvDir'></span></label>
+                </div>
                 <div class='rsa-option-container' id='rsa-container-titleCase'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-titleCase' />
                     <label class='rsa-label' for='rsa-titleCase'><span id='rsa-text-titleCase'></span></label>
@@ -842,10 +940,6 @@ function initRSA() {
                 <div class='rsa-option-container sub' id='rsa-container-checkVI'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-checkVI' />
                     <label class='rsa-label' for='rsa-checkVI'><span id='rsa-text-checkVI'></span></label>
-                </div>
-                <div class='rsa-option-container'>
-                    <input type=checkbox class='rsa-checkbox' id='rsa-SegInvDir' />
-                    <label class='rsa-label' for='rsa-SegInvDir'><span id='rsa-text-SegInvDir'></span></label>
                 </div>
                 <div class='rsa-option-container'>
                     <input type=checkbox class='rsa-checkbox' id='rsa-SegShieldMissing' />
@@ -910,8 +1004,8 @@ function initRSA() {
 
     new WazeWrap.Interface.Tab('RSA', $rsaTab.html, setupOptions);
     $(`<style type="text/css">${rsaCss}</style>`).appendTo('head');
-    $($rsaFixInner).appendTo($rsaFixWrapper);
-    $($rsaFixWrapper).appendTo($('#primary-toolbar > div'));
+    // $($rsaFixInner).appendTo($rsaFixWrapper);
+    // $($rsaFixWrapper).appendTo($('#primary-toolbar > div'));
     WazeWrap.Interface.ShowScriptUpdate(GM_info.script.name, GM_info.script.version, RSA_UPDATE_NOTES, GF_LINK, FORUM_LINK);
     console.log('RSA: loaded');
 }
@@ -1448,11 +1542,9 @@ function processSeg(seg, showNode = false) {
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
 
     // If candidate and has shield
-    if (candidate.isCandidate && hasShield) {
+    if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) {
         if (isValidShield(segAtt)) {
-            if (rsaSettings.HighSegShields) {
-                createHighlight(seg, rsaSettings.HighSegClr);
-            }
+            createHighlight(seg, rsaSettings.HighSegClr);
         } else {
             createHighlight(seg, rsaSettings.ErrSegClr);
         }
@@ -1506,11 +1598,13 @@ function isSegmentCandidate(segAtt, state, country) {
         return candidate;
     }
 
-    for (let i = 0; i < segAtt.streetIDs.length; i++) {
-        street = W.model.streets.getObjectById(segAtt.streetIDs[i]);
-        candidate = isStreetCandidate(street, state, country);
-        if (candidate.isCandidate) {
-            return candidate;
+    if (CheckAltName.includes(country)) {
+        for (let i = 0; i < segAtt.streetIDs.length; i++) {
+            street = W.model.streets.getObjectById(segAtt.streetIDs[i]);
+            candidate = isStreetCandidate(street, state, country);
+            if (candidate.isCandidate) {
+                return candidate;
+            }
         }
     }
     return candidate;
