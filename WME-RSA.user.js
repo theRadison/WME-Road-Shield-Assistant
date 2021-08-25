@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.08.06.01
+// @version      2021.08.25.00
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -22,7 +22,10 @@ const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
 - Updated shields for Canada<br><br>
 <b>FIXES:</b><br>
-- No longer highlights alt street names when it shouldn't<br><br>`;
+- Changes to zoom levels in WME<br><br>`;
+
+var zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10;
+[zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10] = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
 
 const RoadAbbr = {
     //Canada    
@@ -1845,7 +1848,7 @@ function displayNodeIcons(node, turnDat) {
                     break;
                 case 2:
                     xpoint = lblStart.x;
-                    ypoint = lblStart.y - LabelDistance().icon;
+                    ypoint = lblStart.y - `().icon;
                     break;
                 case 3: 
                     xpoint = lblStart.x + LabelDistance().icon;
@@ -1980,52 +1983,52 @@ function LabelDistance() {
     // space is the space between geo points needed to render another icon
     let label_distance = {};
     switch (W.map.getOLMap().getZoom()) {
-        case 10:
+        case zm10:
             label_distance.label = 2;
             label_distance.space = 20;
             label_distance.icon = 1.1;
             break;
-        case 9:
+        case zm9:
             label_distance.label = 2;
             label_distance.space = 20;
             label_distance.icon = 2.2;
             break;
-        case 8:
+        case zm8:
             label_distance.label = 4;
             label_distance.space = 20;
             label_distance.icon = 4.5;
             break;
-        case 7:
+        case zm7:
             label_distance.label = 7;
             label_distance.space = 20;
             label_distance.icon = 8.3;
             break;
-        case 6:
+        case zm6:
             label_distance.label = 12;
             label_distance.space = 30;
             label_distance.icon = 17;
             break;
-        case 5:
+        case zm5:
             label_distance.label = 30;
             label_distance.space = 30;
             label_distance.icon = 34;
             break;
-        case 4:
+        case zm4:
             label_distance.label = 40;
             label_distance.space = 40;
             label_distance.icon = 68;
             break;
-        case 3:
+        case zm3:
             label_distance.label = 70;
             label_distance.space = 70;
             label_distance.icon = 140;
             break;
-        case 2:
+        case zm2:
             label_distance.label = 150;
             label_distance.space = 200;
             label_distance.icon = null;
             break;
-        case 1:
+        case zm1:
             label_distance.label = 200;
             label_distance.space = 250;
             label_distance.icon = null;
