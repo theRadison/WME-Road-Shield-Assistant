@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.08.25.00
+// @version      2021.08.25.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -22,10 +22,11 @@ const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
 const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
 - Updated shields for Canada<br><br>
 <b>FIXES:</b><br>
-- Changes to zoom levels in WME<br><br>`;
+- No longer highlights alt street names when it shouldn't<br><br>`;
 
-var zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10;
-[zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10] = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    var zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10;
+
+    [zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10] = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
 
 const RoadAbbr = {
     //Canada    
@@ -1848,7 +1849,7 @@ function displayNodeIcons(node, turnDat) {
                     break;
                 case 2:
                     xpoint = lblStart.x;
-                    ypoint = lblStart.y - `().icon;
+                    ypoint = lblStart.y - LabelDistance().icon;
                     break;
                 case 3: 
                     xpoint = lblStart.x + LabelDistance().icon;
