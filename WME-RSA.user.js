@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.08.25.01
+// @version      2021.08.26.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -1580,7 +1580,7 @@ function processNode(node, seg1, seg2) {
     let hasGuidence = turnData.hasTurnGuidance();
 
     if (hasGuidence) {
-        if (rsaSettings.ShowNodeShields && W.map.getZoom() > 2) displayNodeIcons(node, turnData);
+        if (rsaSettings.ShowNodeShields && W.map.getZoom() > zm2) displayNodeIcons(node, turnData);
 
         if (rsaSettings.titleCase) {
             let badName = matchTitleCaseThroughNode(turn);
@@ -1874,7 +1874,7 @@ function displayNodeIcons(node, turnDat) {
 }
 
 function displaySegShields(segment, shieldID, shieldText, shieldDir) {
-    if (W.map.getZoom() < 2) return;
+    if (W.map.getZoom() < zm2) return;
 
     const iconURL = `https://renderer-am.waze.com/renderer/v1/signs/${shieldID}?text=${shieldText}`;
     let SegmentPoints = [];
