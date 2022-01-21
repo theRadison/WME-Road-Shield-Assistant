@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2021.08.26.03
+// @version      2021.08.25.01
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
@@ -24,7 +24,9 @@ const RSA_UPDATE_NOTES = `<b>NEW:</b><br>
 <b>FIXES:</b><br>
 - No longer highlights alt street names when it shouldn't<br><br>`;
 
-    var [zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10] = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
+    var zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10;
+
+    [zm0, zm1, zm2, zm3, zm4, zm5, zm6, zm7, zm8, zm9, zm10] = [12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22]
 
 const RoadAbbr = {
     //Canada    
@@ -507,7 +509,13 @@ const RoadAbbr = {
             'I-': 5,
             'US-': 6,
             "SH-": 2117,
-            "SR-": 2117
+            "SR-": 2117,
+            "FM-": 2121,
+            "Beltway ": 2119,
+            "Loop ": 2122,
+            "Park Rd ": 2144,
+            "Recreational Rd ": 2125,
+            "Spur ": 2126
         },
         "Utah": {
             'I-': 5,
@@ -1578,7 +1586,7 @@ function processNode(node, seg1, seg2) {
     let hasGuidence = turnData.hasTurnGuidance();
 
     if (hasGuidence) {
-        if (rsaSettings.ShowNodeShields && W.map.getZoom() > 14) displayNodeIcons(node, turnData);
+        if (rsaSettings.ShowNodeShields && W.map.getZoom() > 2) displayNodeIcons(node, turnData);
 
         if (rsaSettings.titleCase) {
             let badName = matchTitleCaseThroughNode(turn);
@@ -1872,7 +1880,7 @@ function displayNodeIcons(node, turnDat) {
 }
 
 function displaySegShields(segment, shieldID, shieldText, shieldDir) {
-    if (W.map.getZoom() < 14) return;
+    if (W.map.getZoom() < 2) return;
 
     const iconURL = `https://renderer-am.waze.com/renderer/v1/signs/${shieldID}?text=${shieldText}`;
     let SegmentPoints = [];
