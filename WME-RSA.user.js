@@ -1,10 +1,10 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2022.07.24.01
+// @version      2023.03.15.00
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
-// @include      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
+// @match      /^https:\/\/(www|beta)\.waze\.com\/(?!user\/)(.{2,6}\/)?editor\/?.*$/
 // @require      https://greasyfork.org/scripts/24851-wazewrap/code/WazeWrap.js
 // @grant        none
 // @contributionURL https://github.com/WazeDev/Thank-The-Authors
@@ -1005,7 +1005,7 @@ function initRSA() {
     const $rsaFixWrapper = $('<div id="rsa-autoWrapper" class="toolbar-button ItemInactive" style="display:none;margin-right:5px;">');
     const $rsaFixInner = $('<div class="group-title toolbar-top-level-item-title rsa" style="margin:5px 0 0 15px;font-size:12px;">RSA Fix</div>');
 
-    new WazeWrap.Interface.Tab('RSA', $rsaTab.html, setupOptions);
+    WazeWrap.Interface.Tab('RSA', $rsaTab.html, setupOptions, 'RSA');
     $(`<style type="text/css">${rsaCss}</style>`).appendTo('head');
     // $($rsaFixInner).appendTo($rsaFixWrapper);
     // $($rsaFixWrapper).appendTo($('#primary-toolbar > div'));
