@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2023.03.16.00
+// @version      2023.07.29.00
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @match        https://www.waze.com/editor*
@@ -1478,7 +1478,7 @@ function removeAutoFixButton() {
 
 function addShieldClick() {
     const selFea = W.selectionManager.getSelectedFeatures();
-    if (selFea && selFea.length === 1 && selFea[0].model.type === 'segment') {
+    if (selFea && selFea.length === 1 && selFea[0].WW.getType() === 'segment') {
         $('.add-new-road-shield').click();
     } else {
         WazeWrap.Alerts.error(GM_info.script.name, 'You must have only 1 segment selected to use the shield editing menu');
