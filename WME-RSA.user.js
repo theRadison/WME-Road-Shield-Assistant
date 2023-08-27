@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2023.07.29.00
+// @version      2023.08.26.00
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @match        https://www.waze.com/editor*
@@ -1062,7 +1062,7 @@ async function setupOptions() {
         setValue('rsa-TitleCaseClr', rsaSettings.TitleCaseClr);
         setValue('rsa-TitleCaseSftClr', rsaSettings.TitleCaseSftClr);
 
-        if (rsaSettings.titleCase === true && W.model.getTopCountry().id === 235) {
+        if (rsaSettings.titleCase === true && W.model.getTopCountry().attributes.id === 235) {
             $('#rsa-container-checkTWD').css('display', 'block');
             $('#rsa-container-checkTTS').css('display', 'block');
             $('#rsa-container-checkVI').css('display', 'block');
@@ -1405,7 +1405,7 @@ function checkOptions() {
         }
     }
 
-    if (W.model.getTopCountry().id !== 235) {
+    if (W.model.getTopCountry().attributes.id !== 235) {
         $('#rsa-container-titleCase').css('display', 'none');
         $('#rsa-container-TitleCaseClr').css('display', 'none');
         $('#rsa-container-TitleCaseSftClr').css('display', 'none');
@@ -1532,10 +1532,10 @@ function tryScan() {
 
 function processSeg(seg, showNode = false) {
     let segAtt = seg.attributes;
-    let street = W.model.streets.getObjectById(segAtt.primaryStreetID);
-    let cityID = W.model.cities.getObjectById(street.cityID);
-    let stateName = W.model.states.getObjectById(cityID.attributes.stateID).name;
-    let countryID = cityID.attributes.countryID;
+    let street = W.model.streets.getObjectById(segAtt.primaryStreetID).attributes;
+    let cityID = W.model.cities.getObjectById(street.cityID).attributes;
+    let stateName = W.model.states.getObjectById(cityID.stateID).attributes.name;
+    let countryID = cityID.countryID;
     let candidate = isSegmentCandidate(segAtt, stateName, countryID);
     let hasShield = street.signType !== null;
 
