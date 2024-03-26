@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         WME Road Shield Assistant
 // @namespace    https://greasyfork.org/en/users/286957-skidooguy
-// @version      2023.08.26.00
+// @version      2024.03.26.00
 // @description  Adds shield information display to WME 
 // @author       SkiDooGuy
 // @match        https://www.waze.com/editor*
@@ -1739,7 +1739,7 @@ function matchTitleCaseThroughNode(turn) {
 }
 
 function displayNodeIcons(node, turnDat) {
-    const geo = node.geometry.clone();
+    const geo = node.getOLGeometry().clone();
     const trnGuid = turnDat.getTurnGuidance();
     const GUIDANCE = {
         shields: {
@@ -1900,7 +1900,7 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
     oldparam.x = null;
     oldparam.y = null;
     let AtLeastOne = false;
-    $.each(segment.geometry.getVertices(), function(idx, param) {
+    $.each(segment.getOLGeometry().getVertices(), function(idx, param) {
         // Build a new segment with same geometry
         SegmentPoints.push(new OpenLayers.Geometry.Point(param.x, param.y));
 
@@ -1943,7 +1943,7 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
 }
 
 function createHighlight(obj, color, overSized = false) {
-    const geo = obj.geometry.clone();
+    const geo = obj.getOLGeometry().clone();
     let isNode = obj.type == 'node';
 
     if (isNode) {
