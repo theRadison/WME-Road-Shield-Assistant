@@ -1512,7 +1512,7 @@ function tryScan() {
     }
 
     removeHighlights();
-    let selFea = W.selectionManager.getSelectedFeatures();
+    // let selFea = W.selectionManager.getSelectedFeatures();
     // Scan all segments on screen
     if (rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields || rsaSettings.titleCase) {
         _.each(W.model.segments.getObjectArray(), s => {
@@ -1528,20 +1528,21 @@ function tryScan() {
 }
 
 function processSeg(seg, showNode = false) {
+    if(seg === null) return;
     let segAtt = seg.attributes;
     let street = W.model.streets.getObjectById(segAtt.primaryStreetID).attributes;
-    let candidate = isSegmentCandidate(segAtt, stateName, countryID);
     let hasShield = street.signType !== null;
 
     let cityID = W.model.cities.getObjectById(street.cityID).attributes;
     let stateName = W.model.states.getObjectById(cityID.stateID).attributes.name;
     let countryID = cityID.countryID;
+    let candidate = isSegmentCandidate(segAtt, stateName, countryID);
 
     // Exlude ramps
     if (!rsaSettings.ShowRamps && segAtt.roadType === 4) return;
 
     // Only show mH and above
-    if (rsaSettings.mHPlus && segAtt.roadType != 3 && segAtt.roadType != 4 && segAtt.roadType != 6 && segAtt.roadType != 7) return;
+    if (rsaSettings.mHPlus && segAtt.roadType !== 3 && segAtt.roadType !== 4 && segAtt.roadType !== 6 && segAtt.roadType !== 7) return;
 
     // Display shield on map
     if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
@@ -1947,11 +1948,11 @@ function createHighlight(obj, color, overSized = false) {
     if (isNode) {
         const styleNode = {
             strokeColor: color,
-            strokeOpacity: overSized == true ? 1 : 0.75,
+            strokeOpacity: overSized === true ? 1 : 0.75,
             strokeWidth: 4,
             fillColor: color,
             fillOpacity: 0.75,
-            pointRadius: overSized == true ? 7 : 3
+            pointRadius: overSized === true ? 7 : 3
         }
 
         // Point coords
@@ -1964,8 +1965,8 @@ function createHighlight(obj, color, overSized = false) {
         // console.log('seg highlight')
         const style = {
             strokeColor: color,
-            strokeOpacity: overSized == true ? 1 : 0.75,
-            strokeWidth: overSized == true ? 7 : 4,
+            strokeOpacity: overSized === true ? 1 : 0.75,
+            strokeWidth: overSized === true ? 7 : 4,
             fillColor: color,
             fillOpacity: 0.75
         }
