@@ -1456,11 +1456,11 @@ function autoFixButton() {
                 let turn = BadNames[i];
                 let turnDat = turn.getTurnData();
                 let turnGuid = turnDat.getTurnGuidance();
-                let newGuid = turnGuid;
+                // let newGuid = turnGuid;
                 console.log(turn);
                 for (s in turnGuid.roadShields) {
                     turnGuid.roadShields[s].direction = fixName(turnGuid.roadShields[s].direction);
-                };
+                }
                 if (rsaSettings.checkTWD && turnGuid.towards) turnGuid.towards = fixName(turnGuid.towards);
                 if (rsaSettings.checkTTS && turnGuid.tts) turnGuid.tts = fixName(turnGuid.tts);
                 if (rsaSettings.checkVI && turnGuid.visualInstruction) turnGuid.visualInstruction = fixName(turnGuid.visualInstruction);
@@ -1508,7 +1508,7 @@ function tryScan() {
     }
 
     function scanSeg(seg, showInfo = false) {
-        processSeg(seg, showInfo);
+        processSeg(seg);
     }
 
     removeHighlights();
@@ -1527,7 +1527,7 @@ function tryScan() {
     }
 }
 
-function processSeg(seg, showNode = false) {
+function processSeg(seg) {
     if(seg === null) return;
     let segAtt = seg.attributes;
     let street = W.model.streets.getObjectById(segAtt.primaryStreetID).attributes;
@@ -1545,26 +1545,27 @@ function processSeg(seg, showNode = false) {
     if (rsaSettings.mHPlus && segAtt.roadType !== 3 && segAtt.roadType !== 4 && segAtt.roadType !== 6 && segAtt.roadType !== 7) return;
 
     // Display shield on map
-    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
+    if(hasShield === true) {
+        if (rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
 
-    // If candidate and has shield
-    if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) {
-        if (isValidShield(segAtt)) {
-            createHighlight(seg, rsaSettings.HighSegClr);
-        } else {
-            createHighlight(seg, rsaSettings.ErrSegClr);
+        // If candidate and has shield
+        if (rsaSettings.HighSegShields && candidate.isCandidate) {
+            if (isValidShield(segAtt)) {
+                createHighlight(seg, rsaSettings.HighSegClr);
+            } else {
+                createHighlight(seg, rsaSettings.ErrSegClr);
+            }
         }
+
+        // If not candidate and has shield
+        if (rsaSettings.SegShieldError && !candidate.isCandidate) createHighlight(seg, rsaSettings.ErrSegClr);
+        if (rsaSettings.SegHasDir && street.direction) createHighlight(seg, rsaSettings.SegHasDirClr);
+
+        // Highlight seg shields with direction
+        if (rsaSettings.SegInvDir && !street.direction) createHighlight(seg, rsaSettings.SegInvDirClr);
     }
-
     // If candidate and missing shield
-    if (candidate.isCandidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
-
-    // If not candidate and has shield
-    if (!candidate.isCandidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg, rsaSettings.ErrSegClr);
-
-    // Highlight seg shields with direction
-    if (hasShield && street.direction && rsaSettings.SegHasDir) createHighlight(seg, rsaSettings.SegHasDirClr);
-    if (hasShield && !street.direction && rsaSettings.SegInvDir) createHighlight(seg, rsaSettings.SegInvDirClr);
+    if (rsaSettings.SegShieldMissing && candidate.isCandidate && !hasShield) createHighlight(seg, rsaSettings.MissSegClr);
 
     // Streets without capitalized letters
     if (rsaSettings.titleCase) {
@@ -1579,9 +1580,9 @@ function processSeg(seg, showNode = false) {
 function processNode(node, seg1, seg2) {
     let turn = W.model.getTurnGraph().getTurnThroughNode(node,seg1,seg2);
     let turnData = turn.getTurnData();
-    let hasGuidence = turnData.hasTurnGuidance();
+    let hasGuidance = turnData.hasTurnGuidance();
 
-    if (hasGuidence) {
+    if (hasGuidance) {
         if (rsaSettings.ShowNodeShields && W.map.getZoom() > 14) displayNodeIcons(node, turnData);
 
         if (rsaSettings.titleCase) {
@@ -1860,6 +1861,7 @@ function displayNodeIcons(node, turnDat) {
                 case 4:
                     xpoint = lblStart.x + (LabelDistance().icon * 2);
                     ypoint = lblStart.y;
+                    break;
                 default:
                     break;
             }
