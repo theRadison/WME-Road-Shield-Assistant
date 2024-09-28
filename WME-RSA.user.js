@@ -18,8 +18,10 @@
 /* global WazeWrap */
 /* global $ */
 /* global OL */
+/* global OpenLayers */
 /* global _ */
 /* global require */
+/* global I18n */
 
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
@@ -1085,7 +1087,7 @@ async function setupOptions() {
 
     // Register event listeners
     WazeWrap.Events.register('selectionchanged', null, removeAutoFixButton);
-    WazeWrap.Events.register('selectionchanged', null, tryScan);
+    // WazeWrap.Events.register('selectionchanged', null, tryScan);
     WazeWrap.Events.register('moveend', null, removeAutoFixButton);
     WazeWrap.Events.register('moveend', null, tryScan);
     WazeWrap.Events.register('moveend', null, checkOptions);
@@ -1095,8 +1097,8 @@ async function setupOptions() {
 
     setEleStatus();
 
-    $('.rsa-checkbox').change(function () {
-        let settingName = $(this)[0].id.substr(4);
+    $('.rsa-checkbox').on("change",function () {
+        let settingName = $(this)[0].id.substring(4);
         rsaSettings[settingName] = this.checked;
 
         // Check to ensure highlight nodes and show node shields don't onverlap each other
@@ -1117,15 +1119,15 @@ async function setupOptions() {
         removeHighlights();
         tryScan();
     });
-    $('.rsa-color-input').change(function () {
-        let settingName = $(this)[0].id.substr(4);
+    $('.rsa-color-input').on("change",function () {
+        let settingName = $(this)[0].id.substring(4);
         rsaSettings[settingName] = this.value;
         saveSettings();
         setEleStatus();
         removeHighlights();
         tryScan();
     });
-    $('#rsa-titleCase').click(function () {
+    $('#rsa-titleCase').trigger("click", function () {
         if (getId('rsa-titleCase').checked) {
             $('#rsa-container-checkTWD').css('display', 'block');
             $('#rsa-container-checkTTS').css('display', 'block');
@@ -1140,7 +1142,7 @@ async function setupOptions() {
     //     if (!getId('rsa-ShowNodeShields').checked) $('.rsa-option-container.sub').hide();
     //     else $('.rsa-option-container.sub').show();
     // });
-    $('#rsa-resetSettings').click(function() {
+    $('#rsa-resetSettings').on("click",function() {
         const defaultSettings = {
             lastSaveAction: 0,
             enableScript: true,
@@ -1479,7 +1481,7 @@ function removeAutoFixButton() {
 function addShieldClick() {
     const selFea = W.selectionManager.getSelectedFeatures();
     if (selFea && selFea.length === 1 && selFea[0].WW.getType() === 'segment') {
-        $('.add-new-road-shield').click();
+        $('.add-new-road-shield').trigger("click");
     } else {
         WazeWrap.Alerts.error(GM_info.script.name, 'You must have only 1 segment selected to use the shield editing menu');
     }
@@ -1511,33 +1513,29 @@ function tryScan() {
 
     removeHighlights();
     let selFea = W.selectionManager.getSelectedFeatures();
-    if (selFea && selFea.length > 0) {
-        // if (selFea.model.type === 'segment') scanSeg(selFea.model, true);
-    } else {
-        // Scan all segments on screen
-        if (rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields || rsaSettings.titleCase) {
-            _.each(W.model.segments.getObjectArray(), s => {
-                scanSeg(s);
-            });
-        }
-        // Scan all nodes on screen
-        if (rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields || rsaSettings.titleCase) {
-            _.each(W.model.nodes.getObjectArray(), n => {
-                scanNode(n);
-            });
-        }
-       
+    // Scan all segments on screen
+    if (rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields || rsaSettings.titleCase) {
+        _.each(W.model.segments.getObjectArray(), s => {
+            scanSeg(s);
+        });
+    }
+    // Scan all nodes on screen
+    if (rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields || rsaSettings.titleCase) {
+        _.each(W.model.nodes.getObjectArray(), n => {
+            scanNode(n);
+        });
     }
 }
 
 function processSeg(seg, showNode = false) {
     let segAtt = seg.attributes;
     let street = W.model.streets.getObjectById(segAtt.primaryStreetID).attributes;
+    let candidate = isSegmentCandidate(segAtt, stateName, countryID);
+    let hasShield = street.signType !== null;
+
     let cityID = W.model.cities.getObjectById(street.cityID).attributes;
     let stateName = W.model.states.getObjectById(cityID.stateID).attributes.name;
     let countryID = cityID.countryID;
-    let candidate = isSegmentCandidate(segAtt, stateName, countryID);
-    let hasShield = street.signType !== null;
 
     // Exlude ramps
     if (!rsaSettings.ShowRamps && segAtt.roadType === 4) return;
@@ -1944,7 +1942,7 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
 
 function createHighlight(obj, color, overSized = false) {
     const geo = obj.getOLGeometry().clone();
-    let isNode = obj.type == 'node';
+    let isNode = obj.type === 'node';
 
     if (isNode) {
         const styleNode = {
