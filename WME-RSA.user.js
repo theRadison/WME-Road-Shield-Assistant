@@ -657,6 +657,10 @@ const Strings = {
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps',
+        'Experimental': 'Experimental Features',
+        'AltenativeShields': 'Alternative Name Shields',
+        'AlternativePrimaryCity': 'Alternative Street with Primary City',
+        'AlternativeNoCity': 'Alternative Street with No City',
         'mHPlus': 'Only show on minor highways or greater',
         'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
         'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
@@ -961,6 +965,45 @@ function initRSA() {
             </div>
 
             <span id='rsa-text-HighlightColors' class='rsa-header'></span>
+            <div style='border-top:2px solid black;'>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-HighSegClr' />
+                    <label class='rsa-label' for='rsa-HighSegClr'><span id='rsa-text-HighSegShieldsClr'></span></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-SegHasDirClr' />
+                    <label class='rsa-label' for='rsa-SegHasDirClr'><span id='rsa-text-SegHasDirClr'></span></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-SegInvDirClr' />
+                    <label class='rsa-label' for='rsa-SegInvDirClr'><span id='rsa-text-SegInvDirClr'></span></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-MissSegClr' />
+                    <label class='rsa-label' for='rsa-MissSegClr'><span id='rsa-text-SegShieldMissingClr'></span></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-ErrSegClr' />
+                    <label class='rsa-label' for='rsa-ErrSegClr'><span id='rsa-text-SegShieldErrorClr'></span></label>
+                </div>
+                <div class='rsa-option-container'>
+                    <input type=color class='rsa-color-input' id='rsa-HighNodeClr' />
+                    <label class='rsa-label' for='rsa-HighNodeClr'><span id='rsa-text-HighNodeShieldsClr'></span></label>
+                </div>
+                <div class='rsa-option-container no-display'>
+                    <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
+                    <label class='rsa-label' for='rsa-MissNodeClr'><span id='rsa-text-NodeShieldMissingClr'></span></label>
+                </div>
+                <div class='rsa-option-container' id='rsa-container-TitleCaseClr'>
+                    <input type=color class='rsa-color-input' id='rsa-TitleCaseClr' />
+                    <label class='rsa-label' for='rsa-TitleCaseClr'><span id='rsa-text-TitleCaseClr'></span></label>
+                </div>
+                <div class='rsa-option-container' id='rsa-container-TitleCaseSftClr'>
+                    <input type=color class='rsa-color-input' id='rsa-TitleCaseSftClr' />
+                    <label class='rsa-label' for='rsa-TitleCaseSftClr'><span id='rsa-text-TitleCaseSftClr'></span></label>
+                </div>
+            </div>
+            <span id='rsa-text-Experimental' class='rsa-header'></span>
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
                     <input type=color class='rsa-color-input' id='rsa-HighSegClr' />
