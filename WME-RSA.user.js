@@ -18,8 +18,10 @@
 /* global WazeWrap */
 /* global $ */
 /* global OL */
+/* global OpenLayers */
 /* global _ */
 /* global require */
+/* global I18n */
 
 const GF_LINK = 'https://greasyfork.org/en/scripts/425050-wme-road-shield-assisstant';
 const FORUM_LINK = 'https://www.waze.com/forum/viewtopic.php?f=1851&t=315748';
@@ -1085,7 +1087,7 @@ async function setupOptions() {
 
     // Register event listeners
     WazeWrap.Events.register('selectionchanged', null, removeAutoFixButton);
-    WazeWrap.Events.register('selectionchanged', null, tryScan);
+    // WazeWrap.Events.register('selectionchanged', null, tryScan);
     WazeWrap.Events.register('moveend', null, removeAutoFixButton);
     WazeWrap.Events.register('moveend', null, tryScan);
     WazeWrap.Events.register('moveend', null, checkOptions);
@@ -1095,8 +1097,8 @@ async function setupOptions() {
 
     setEleStatus();
 
-    $('.rsa-checkbox').change(function () {
-        let settingName = $(this)[0].id.substr(4);
+    $('.rsa-checkbox').on("change",function () {
+        let settingName = $(this)[0].id.substring(4);
         rsaSettings[settingName] = this.checked;
 
         // Check to ensure highlight nodes and show node shields don't onverlap each other
@@ -1117,15 +1119,15 @@ async function setupOptions() {
         removeHighlights();
         tryScan();
     });
-    $('.rsa-color-input').change(function () {
-        let settingName = $(this)[0].id.substr(4);
+    $('.rsa-color-input').on("change",function () {
+        let settingName = $(this)[0].id.substring(4);
         rsaSettings[settingName] = this.value;
         saveSettings();
         setEleStatus();
         removeHighlights();
         tryScan();
     });
-    $('#rsa-titleCase').click(function () {
+    $('#rsa-titleCase').trigger("click", function () {
         if (getId('rsa-titleCase').checked) {
             $('#rsa-container-checkTWD').css('display', 'block');
             $('#rsa-container-checkTTS').css('display', 'block');
@@ -1140,7 +1142,7 @@ async function setupOptions() {
     //     if (!getId('rsa-ShowNodeShields').checked) $('.rsa-option-container.sub').hide();
     //     else $('.rsa-option-container.sub').show();
     // });
-    $('#rsa-resetSettings').click(function() {
+    $('#rsa-resetSettings').on("click",function() {
         const defaultSettings = {
             lastSaveAction: 0,
             enableScript: true,
@@ -1454,11 +1456,11 @@ function autoFixButton() {
                 let turn = BadNames[i];
                 let turnDat = turn.getTurnData();
                 let turnGuid = turnDat.getTurnGuidance();
-                let newGuid = turnGuid;
+                // let newGuid = turnGuid;
                 console.log(turn);
                 for (s in turnGuid.roadShields) {
                     turnGuid.roadShields[s].direction = fixName(turnGuid.roadShields[s].direction);
-                };
+                }
                 if (rsaSettings.checkTWD && turnGuid.towards) turnGuid.towards = fixName(turnGuid.towards);
                 if (rsaSettings.checkTTS && turnGuid.tts) turnGuid.tts = fixName(turnGuid.tts);
                 if (rsaSettings.checkVI && turnGuid.visualInstruction) turnGuid.visualInstruction = fixName(turnGuid.visualInstruction);
@@ -1479,7 +1481,7 @@ function removeAutoFixButton() {
 function addShieldClick() {
     const selFea = W.selectionManager.getSelectedFeatures();
     if (selFea && selFea.length === 1 && selFea[0].WW.getType() === 'segment') {
-        $('.add-new-road-shield').click();
+        $('.add-new-road-shield').trigger("click");
     } else {
         WazeWrap.Alerts.error(GM_info.script.name, 'You must have only 1 segment selected to use the shield editing menu');
     }
@@ -1506,66 +1508,64 @@ function tryScan() {
     }
 
     function scanSeg(seg, showInfo = false) {
-        processSeg(seg, showInfo);
+        processSeg(seg);
     }
 
     removeHighlights();
-    let selFea = W.selectionManager.getSelectedFeatures();
-    if (selFea && selFea.length > 0) {
-        // if (selFea.model.type === 'segment') scanSeg(selFea.model, true);
-    } else {
-        // Scan all segments on screen
-        if (rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields || rsaSettings.titleCase) {
-            _.each(W.model.segments.getObjectArray(), s => {
-                scanSeg(s);
-            });
-        }
-        // Scan all nodes on screen
-        if (rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields || rsaSettings.titleCase) {
-            _.each(W.model.nodes.getObjectArray(), n => {
-                scanNode(n);
-            });
-        }
-       
+    // let selFea = W.selectionManager.getSelectedFeatures();
+    // Scan all segments on screen
+    if (rsaSettings.ShowSegShields || rsaSettings.SegShieldMissing || rsaSettings.SegShieldError || rsaSettings.HighSegShields || rsaSettings.titleCase) {
+        _.each(W.model.segments.getObjectArray(), s => {
+            scanSeg(s);
+        });
+    }
+    // Scan all nodes on screen
+    if (rsaSettings.HighNodeShields || rsaSettings.ShowNodeShields || rsaSettings.titleCase) {
+        _.each(W.model.nodes.getObjectArray(), n => {
+            scanNode(n);
+        });
     }
 }
 
-function processSeg(seg, showNode = false) {
+function processSeg(seg) {
+    if(seg === null) return;
     let segAtt = seg.attributes;
     let street = W.model.streets.getObjectById(segAtt.primaryStreetID).attributes;
+    let hasShield = street.signType !== null;
+
     let cityID = W.model.cities.getObjectById(street.cityID).attributes;
     let stateName = W.model.states.getObjectById(cityID.stateID).attributes.name;
     let countryID = cityID.countryID;
     let candidate = isSegmentCandidate(segAtt, stateName, countryID);
-    let hasShield = street.signType !== null;
 
     // Exlude ramps
     if (!rsaSettings.ShowRamps && segAtt.roadType === 4) return;
 
     // Only show mH and above
-    if (rsaSettings.mHPlus && segAtt.roadType != 3 && segAtt.roadType != 4 && segAtt.roadType != 6 && segAtt.roadType != 7) return;
+    if (rsaSettings.mHPlus && segAtt.roadType !== 3 && segAtt.roadType !== 4 && segAtt.roadType !== 6 && segAtt.roadType !== 7) return;
 
     // Display shield on map
-    if (hasShield && rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
+    if(hasShield === true) {
+        if (rsaSettings.ShowSegShields) displaySegShields(seg, street.signType, street.signText, street.direction);
 
-    // If candidate and has shield
-    if (candidate.isCandidate && hasShield && rsaSettings.HighSegShields) {
-        if (isValidShield(segAtt)) {
-            createHighlight(seg, rsaSettings.HighSegClr);
-        } else {
-            createHighlight(seg, rsaSettings.ErrSegClr);
+        // If candidate and has shield
+        if (rsaSettings.HighSegShields && candidate.isCandidate) {
+            if (isValidShield(segAtt)) {
+                createHighlight(seg, rsaSettings.HighSegClr);
+            } else {
+                createHighlight(seg, rsaSettings.ErrSegClr);
+            }
         }
+
+        // If not candidate and has shield
+        if (rsaSettings.SegShieldError && !candidate.isCandidate) createHighlight(seg, rsaSettings.ErrSegClr);
+        if (rsaSettings.SegHasDir && street.direction) createHighlight(seg, rsaSettings.SegHasDirClr);
+
+        // Highlight seg shields with direction
+        if (rsaSettings.SegInvDir && !street.direction) createHighlight(seg, rsaSettings.SegInvDirClr);
     }
-
     // If candidate and missing shield
-    if (candidate.isCandidate && !hasShield && rsaSettings.SegShieldMissing) createHighlight(seg, rsaSettings.MissSegClr);
-
-    // If not candidate and has shield
-    if (!candidate.isCandidate && hasShield && rsaSettings.SegShieldError) createHighlight(seg, rsaSettings.ErrSegClr);
-
-    // Highlight seg shields with direction
-    if (hasShield && street.direction && rsaSettings.SegHasDir) createHighlight(seg, rsaSettings.SegHasDirClr);
-    if (hasShield && !street.direction && rsaSettings.SegInvDir) createHighlight(seg, rsaSettings.SegInvDirClr);
+    if (rsaSettings.SegShieldMissing && candidate.isCandidate && !hasShield) createHighlight(seg, rsaSettings.MissSegClr);
 
     // Streets without capitalized letters
     if (rsaSettings.titleCase) {
@@ -1580,9 +1580,9 @@ function processSeg(seg, showNode = false) {
 function processNode(node, seg1, seg2) {
     let turn = W.model.getTurnGraph().getTurnThroughNode(node,seg1,seg2);
     let turnData = turn.getTurnData();
-    let hasGuidence = turnData.hasTurnGuidance();
+    let hasGuidance = turnData.hasTurnGuidance();
 
-    if (hasGuidence) {
+    if (hasGuidance) {
         if (rsaSettings.ShowNodeShields && W.map.getZoom() > 14) displayNodeIcons(node, turnData);
 
         if (rsaSettings.titleCase) {
@@ -1861,6 +1861,7 @@ function displayNodeIcons(node, turnDat) {
                 case 4:
                     xpoint = lblStart.x + (LabelDistance().icon * 2);
                     ypoint = lblStart.y;
+                    break;
                 default:
                     break;
             }
@@ -1944,16 +1945,16 @@ function displaySegShields(segment, shieldID, shieldText, shieldDir) {
 
 function createHighlight(obj, color, overSized = false) {
     const geo = obj.getOLGeometry().clone();
-    let isNode = obj.type == 'node';
+    let isNode = obj.type === 'node';
 
     if (isNode) {
         const styleNode = {
             strokeColor: color,
-            strokeOpacity: overSized == true ? 1 : 0.75,
+            strokeOpacity: overSized === true ? 1 : 0.75,
             strokeWidth: 4,
             fillColor: color,
             fillOpacity: 0.75,
-            pointRadius: overSized == true ? 7 : 3
+            pointRadius: overSized === true ? 7 : 3
         }
 
         // Point coords
@@ -1966,8 +1967,8 @@ function createHighlight(obj, color, overSized = false) {
         // console.log('seg highlight')
         const style = {
             strokeColor: color,
-            strokeOpacity: overSized == true ? 1 : 0.75,
-            strokeWidth: overSized == true ? 7 : 4,
+            strokeOpacity: overSized === true ? 1 : 0.75,
+            strokeWidth: overSized === true ? 7 : 4,
             fillColor: color,
             fillOpacity: 0.75
         }
