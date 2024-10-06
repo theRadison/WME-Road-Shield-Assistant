@@ -658,7 +658,7 @@ const Strings = {
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps',
         'Experimental': 'Experimental Features',
-        'AltenativeShields': 'Alternative Name Shields',
+        'AlternativeShields': 'Alternative Name Shields',
         'AlternativePrimaryCity': 'Alternative Street with Primary City',
         'AlternativeNoCity': 'Alternative Street with No City',
         'mHPlus': 'Only show on minor highways or greater',
@@ -698,6 +698,10 @@ const Strings = {
         'HighlightHead': 'Highlights',
         'HighlightColors': 'Highlight Colors',
         'ShowRamps': 'Include Ramps',
+        'Experimental': 'Experimental Features',
+        'AlternativeShields': 'Alternative Name Shields',
+        'AlternativePrimaryCity': 'Alternative Street with Primary City',
+        'AlternativeNoCity': 'Alternative Street with No City',
         'mHPlus': 'Only show on minor highways or greater',
         'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
         'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
@@ -963,7 +967,6 @@ function initRSA() {
                     <label class='rsa-label' for='rsa-SegShieldError'><span id='rsa-text-SegShieldError'></span></label>
                 </div>
             </div>
-
             <span id='rsa-text-HighlightColors' class='rsa-header'></span>
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
@@ -1006,40 +1009,16 @@ function initRSA() {
             <span id='rsa-text-Experimental' class='rsa-header'></span>
             <div style='border-top:2px solid black;'>
                 <div class='rsa-option-container'>
-                    <input type=color class='rsa-color-input' id='rsa-HighSegClr' />
-                    <label class='rsa-label' for='rsa-HighSegClr'><span id='rsa-text-HighSegShieldsClr'></span></label>
+                    <input type=checkbox class='rsa-checkbox' id='rsa-AlternativeShields' />
+                    <label class='rsa-label' for='rsa-AlternativeShields'><span id='rsa-text-AlternativeShields'></span></label>
                 </div>
-                <div class='rsa-option-container'>
-                    <input type=color class='rsa-color-input' id='rsa-SegHasDirClr' />
-                    <label class='rsa-label' for='rsa-SegHasDirClr'><span id='rsa-text-SegHasDirClr'></span></label>
+                <div class='rsa-option-container sub'>
+                    <input type=radio class='rsa-checkbox' name='AlternativeShields' id='rsa-AlternativePrimaryCity' checked/>
+                    <label class='rsa-label' for='rsa-AlternativePrimaryCity'><span id='rsa-text-AlternativePrimaryCity'></span></label>
                 </div>
-                <div class='rsa-option-container'>
-                    <input type=color class='rsa-color-input' id='rsa-SegInvDirClr' />
-                    <label class='rsa-label' for='rsa-SegInvDirClr'><span id='rsa-text-SegInvDirClr'></span></label>
-                </div>
-                <div class='rsa-option-container'>
-                    <input type=color class='rsa-color-input' id='rsa-MissSegClr' />
-                    <label class='rsa-label' for='rsa-MissSegClr'><span id='rsa-text-SegShieldMissingClr'></span></label>
-                </div>
-                <div class='rsa-option-container'>
-                    <input type=color class='rsa-color-input' id='rsa-ErrSegClr' />
-                    <label class='rsa-label' for='rsa-ErrSegClr'><span id='rsa-text-SegShieldErrorClr'></span></label>
-                </div>
-                <div class='rsa-option-container'>
-                    <input type=color class='rsa-color-input' id='rsa-HighNodeClr' />
-                    <label class='rsa-label' for='rsa-HighNodeClr'><span id='rsa-text-HighNodeShieldsClr'></span></label>
-                </div>
-                <div class='rsa-option-container no-display'>
-                    <input type=color class='rsa-color-input' id='rsa-MissNodeClr' />
-                    <label class='rsa-label' for='rsa-MissNodeClr'><span id='rsa-text-NodeShieldMissingClr'></span></label>
-                </div>
-                <div class='rsa-option-container' id='rsa-container-TitleCaseClr'>
-                    <input type=color class='rsa-color-input' id='rsa-TitleCaseClr' />
-                    <label class='rsa-label' for='rsa-TitleCaseClr'><span id='rsa-text-TitleCaseClr'></span></label>
-                </div>
-                <div class='rsa-option-container' id='rsa-container-TitleCaseSftClr'>
-                    <input type=color class='rsa-color-input' id='rsa-TitleCaseSftClr' />
-                    <label class='rsa-label' for='rsa-TitleCaseSftClr'><span id='rsa-text-TitleCaseSftClr'></span></label>
+                <div class='rsa-option-container sub'>
+                    <input type=radio class='rsa-checkbox' name='AlternativeShields' id='rsa-AlternativeNoCity' />
+                    <label class='rsa-label' for='rsa-AlternativeNoCity'><span id='rsa-text-AlternativeNoCity'></span></label>
                 </div>
             </div>
 
@@ -1262,6 +1241,7 @@ async function loadSettings() {
         TitleCaseClr: '#ff9933',
         TitleCaseSftClr: '#ffff66',
         ShowRamps: true,
+        AlternativeShields: false,
         mHPlus: false,
         titleCase: false,
         checkTWD: false,
@@ -1284,6 +1264,20 @@ async function loadSettings() {
             rsaSettings[funcProp] = defaultSettings[funcProp];
         }
     });
+    $('#rsa-AlternativeShields').on('change', function(e) {
+        if(this.checked) {
+            $('#rsa-AlternativePrimaryCity').prop('disabled', false);
+            $('#rsa-AlternativeNoCity').prop('disabled', false);
+        }
+        else {
+            $('#rsa-AlternativePrimaryCity').prop('disabled', true);
+            $('#rsa-AlternativeNoCity').prop('disabled', true);
+        }
+    })
+    if(!rsaSettings.AlternativeShields){
+        $('#rsa-AlternativePrimaryCity').prop('disabled', true);
+        $('#rsa-AlternativeNoCity').prop('disabled', true);
+    }
 }
 
 async function saveSettings() {
@@ -1313,6 +1307,7 @@ async function saveSettings() {
         TitleCaseClr,
         TitleCaseSftClr,
         ShowRamps,
+        AlternativeShields,
         mHPlus,
         titleCase,
         checkTWD,
@@ -1348,6 +1343,7 @@ async function saveSettings() {
         TitleCaseClr,
         TitleCaseSftClr,
         ShowRamps,
+        AlternativeShields,
         mHPlus,
         titleCase,
         checkTWD,
