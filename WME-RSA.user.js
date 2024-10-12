@@ -739,6 +739,10 @@ const Strings = {
         'HighlightHead': 'Destacar',
         'HighlightColors': 'Reseña de Colores',
         'ShowRamps': 'Incluir Rampas',
+        'Experimental': 'Experimental Features',
+        'AlternativeShields': 'Alternative Name Shields',
+        'AlternativePrimaryCity': 'Alternative Street with Primary City',
+        'AlternativeNoCity': 'Alternative Street with No City',
         'mHPlus': 'Only show on minor highways or greater',
         'titleCase': 'Segments/nodes with direction not in large-and-small-caps format',
         'TitleCaseClr': 'Segments/nodes with direction not in large-and-small-caps format',
@@ -748,7 +752,7 @@ const Strings = {
         'checkVI': 'Include Visual Instruction field'
     },
     'uk': {
-        "enableScript":"Скріпт ввімкнено",
+        "enableScript":"Скріпт вимкнено",
         "HighSegShields":"Сегменти з шильдами",
         "HighSegShieldsClr":"Сегменти з шильдами",
         "ShowSegShields":"Показувати шильди на мапі",
@@ -817,8 +821,12 @@ const Strings = {
         "HighlightHead":"Surlignages", 
         "HighlightColors":"Couleurs de surlignage", 
         "ShowRamps":"Inclure les bretelles", 
-        "mHPlus":"Only show on minor highways or greater", 
-        "titleCase":"Segments/nodes with direction not in large-and-small-caps format", 
+        "mHPlus":"Only show on minor highways or greater",
+        'Experimental': 'Experimental Features',
+        'AlternativeShields': 'Alternative Name Shields',
+        'AlternativePrimaryCity': 'Alternative Street with Primary City',
+        'AlternativeNoCity': 'Alternative Street with No City',
+        "titleCase":"Segments/nodes with direction not in large-and-small-caps format",
         "TitleCaseClr":"Segments/nodes with direction not in large-and-small-caps format", 
         "TitleCaseSftClr":"Direction in free text might not be in large-and-small-caps format", 
         "checkTWD":'Inclure le champ "en direction de"', 
@@ -1046,6 +1054,12 @@ function initRSA() {
     console.log('RSA: loaded');
 }
 
+function toggleAlternativeShields() {
+    if(!rsaSettings.AlternativeShields) {
+        $('#rsa-AlternativePrimaryCity').prop('disabled', true);
+        $('#rsa-AlternativeNoCity').prop('disabled', true);
+    }
+}
 async function setupOptions() {
     await loadSettings();
 
@@ -1071,10 +1085,7 @@ async function setupOptions() {
                 alternativeType = noCityButton.value;
             }
         }
-        if(!rsaSettings.AlternativeShields) {
-            $('#rsa-AlternativePrimaryCity').prop('disabled', true);
-            $('#rsa-AlternativeNoCity').prop('disabled', true);
-        }
+        toggleAlternativeShields();
     }
     // Set user options
     function setEleStatus() {
@@ -1133,6 +1144,7 @@ async function setupOptions() {
             inputElem.attr('value', value);
             // inputElem.css('border', `1px solid ${value}`);
         }
+        toggleAlternativeShields();
     }
 
     // Register event listeners
